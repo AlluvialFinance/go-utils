@@ -23,8 +23,9 @@ func New(cfg *Config) (*logrus.Logger, error) {
 		return nil, err
 	}
 
-	return &logrus.Logger{
-		Formatter: formatter,
-		Level:     level,
-	}, nil
+	l := logrus.New()
+	l.SetFormatter(formatter)
+	l.SetLevel(level)
+
+	return l, nil
 }
