@@ -13,7 +13,7 @@ type Logger interface {
 
 func New(cfg *Config) (Logger, error) {
 
-	log, err := newLogrus(cfg.Format, cfg.Level) // TODO, alternative implementaitons..
+	log, err := newLogrus(cfg.Format, cfg.Level) // TODO, enable configurable logger type
 	if err != nil {
 		return nil, err
 	}
