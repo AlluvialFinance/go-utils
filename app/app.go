@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"net/http"
 	"os"
 	"os/signal"
@@ -51,7 +52,7 @@ type App struct {
 
 	prometheus *prometheus.Registry
 
-	logger *logrus.Logger
+	logger kilnlog.Logger
 
 	services []interface{}
 	toStop   []Runnable
@@ -100,7 +101,7 @@ func New(cfg *Config) (*App, error) {
 	}, nil
 }
 
-func (app *App) SetLogger(logger *logrus.Logger) {
+func (app *App) SetLogger(logger kilnlog.Logger) {
 	app.logger = logger
 	app.server.SetLogger(logger)
 	app.healthServer.SetLogger(logger)
@@ -251,7 +252,7 @@ func (app *App) Run() error {
 	return app.run()
 }
 
-func (app *App) Logger() *logrus.Logger {
+func (app *App) Logger() logrus.FieldLogger {
 	return app.logger
 }
 
@@ -482,7 +483,7 @@ func (app *App) instrumentMiddleware() alice.Chain {
 }
 
 func (app *App) loggerMiddleware(h http.Handler) http.Handler {
-	return handlers.CombinedLoggingHandler(app.logger.Out, h)
+	return handlers.CombinedLoggingHandler(app.logger.Writer(), h)
 }
 
 func (app *App) requestMetricsMiddleware(h http.Handler) http.Handler {

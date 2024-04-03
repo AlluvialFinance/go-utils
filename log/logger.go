@@ -1,30 +1,21 @@
 package log
 
 import (
-	"fmt"
+	"io"
 
 	"github.com/sirupsen/logrus"
 )
 
-func New(cfg *Config) (*logrus.Logger, error) {
-	var formatter logrus.Formatter
+type Logger interface {
+	logrus.FieldLogger
+	Writer() io.Writer
+}
 
-	switch cfg.Format {
-	case "text":
-		formatter = &logrus.TextFormatter{}
-	case "json", "":
-		formatter = &logrus.JSONFormatter{}
-	default:
-		return nil, fmt.Errorf("invalid log encoding format %q", cfg.Format)
-	}
+func New(cfg *Config) (Logger, error) {
 
-	level, err := logrus.ParseLevel(cfg.Level)
+	log, err := newLogrus(cfg.Format, cfg.Level) // TODO, alternative implementaitons..
 	if err != nil {
 		return nil, err
 	}
-
-	return &logrus.Logger{
-		Formatter: formatter,
-		Level:     level,
-	}, nil
+	return log, nil
 }
