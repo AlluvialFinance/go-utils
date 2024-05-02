@@ -13,7 +13,7 @@ import (
 	keystore "github.com/kilnfi/go-utils/keystore"
 )
 
-var _ (keystore.Store) = &KeyStore{}
+var _ keystore.Store = &KeyStore{}
 
 type KeyStore struct {
 	cfg  *Config
