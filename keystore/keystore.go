@@ -19,5 +19,5 @@ type Store interface {
 	HasAccount(ctx context.Context, addr gethcommon.Address) (bool, error)
 	SignTx(ctx context.Context, addr gethcommon.Address, tx *gethtypes.Transaction, chainID *big.Int) (*gethtypes.Transaction, error)
 	Import(ctx context.Context, hexkey string) (*Account, error)
-	SignerAddress(context.Context) (*Account, error)
+	SignerAddress(context.Context) (gethcommon.Address, error)
 }
