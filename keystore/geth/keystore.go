@@ -13,6 +13,8 @@ import (
 	keystore "github.com/kilnfi/go-utils/keystore"
 )
 
+var _ (keystore.Store) = &KeyStore{}
+
 type KeyStore struct {
 	cfg  *Config
 	keys *gethkeystore.KeyStore
@@ -69,4 +71,19 @@ func (s *KeyStore) SignTx(_ context.Context, addr gethcommon.Address, tx *gethty
 
 func (s *KeyStore) HasAccount(_ context.Context, addr gethcommon.Address) (bool, error) {
 	return s.keys.HasAddress(addr), nil
+}
+
+func (s *KeyStore) SignerAddress(_ context.Context) (*keystore.Account, error) {
+	if s.keys == nil {
+		return nil, fmt.Errorf("no cached keys")
+	}
+	accs := s.keys.Accounts()
+	if len(accs) < 1 {
+		return nil, fmt.Errorf("keystore has no accounts")
+	}
+	// select first (primary account) address
+	return &keystore.Account{
+		Addr: accs[0].Address,
+		URL:  accs[0].URL,
+	}, nil
 }
