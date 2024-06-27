@@ -339,9 +339,9 @@ func (mr *MockClientMockRecorder) GetVoluntaryExits(ctx interface{}) *gomock.Cal
 }
 
 // SignedVoluntaryExits mocks base method.
-func (m *MockClient) SignedVoluntaryExits(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (string, error) {
+func (m *MockClient) SubmitSignedVoluntaryExit(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignedVoluntaryExits", ctx, epoch, validatorIdx, signature)
+	ret := m.ctrl.Call(m, "SubmitSignedVoluntaryExit", ctx, epoch, validatorIdx, signature)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -350,7 +350,7 @@ func (m *MockClient) SignedVoluntaryExits(ctx context.Context, epoch common.Epoc
 // SignedVoluntaryExits indicates an expected call of SignedVoluntaryExits.
 func (mr *MockClientMockRecorder) SignedVoluntaryExits(ctx, epoch, validatorIdx, signature interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignedVoluntaryExits", reflect.TypeOf((*MockClient)(nil).SignedVoluntaryExits), ctx, epoch, validatorIdx, signature)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubmitSignedVoluntaryExit", reflect.TypeOf((*MockClient)(nil).SubmitSignedVoluntaryExit), ctx, epoch, validatorIdx, signature)
 }
 
 // MockBeaconClient is a mock of BeaconClient interface.
@@ -647,9 +647,9 @@ func (mr *MockBeaconClientMockRecorder) GetVoluntaryExits(ctx interface{}) *gomo
 }
 
 // SignedVoluntaryExits mocks base method.
-func (m *MockBeaconClient) SignedVoluntaryExits(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (string, error) {
+func (m *MockBeaconClient) SubmitSignedVoluntaryExit(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignedVoluntaryExits", ctx, epoch, validatorIdx, signature)
+	ret := m.ctrl.Call(m, "SubmitSignedVoluntaryExit", ctx, epoch, validatorIdx, signature)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -658,7 +658,7 @@ func (m *MockBeaconClient) SignedVoluntaryExits(ctx context.Context, epoch commo
 // SignedVoluntaryExits indicates an expected call of SignedVoluntaryExits.
 func (mr *MockBeaconClientMockRecorder) SignedVoluntaryExits(ctx, epoch, validatorIdx, signature interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignedVoluntaryExits", reflect.TypeOf((*MockBeaconClient)(nil).SignedVoluntaryExits), ctx, epoch, validatorIdx, signature)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubmitSignedVoluntaryExit", reflect.TypeOf((*MockBeaconClient)(nil).SubmitSignedVoluntaryExit), ctx, epoch, validatorIdx, signature)
 }
 
 // MockNodeClient is a mock of NodeClient interface.
