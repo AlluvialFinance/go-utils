@@ -100,6 +100,8 @@ type BeaconClient interface {
 
 	// GetVoluntaryExits returns voluntary exits known by the node but not necessarily incorporated into any block.
 	GetVoluntaryExits(ctx context.Context) (beaconphase0.VoluntaryExits, error)
+
+	SignedVoluntaryExits(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (string, error)
 }
 
 type NodeClient interface {
