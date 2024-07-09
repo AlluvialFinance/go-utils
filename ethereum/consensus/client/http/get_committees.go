@@ -13,17 +13,7 @@ import (
 // GetCommittees returns the committees for the given state.
 // Set epoch and/or index and/or slot to filter result (if nil no filter is applied)
 func (c *Client) GetCommittees(ctx context.Context, stateID string, epoch *beaconcommon.Epoch, index *beaconcommon.CommitteeIndex, slot *beaconcommon.Slot) ([]*types.Committee, error) {
-	rv, err := c.getCommittees(ctx, stateID, epoch, index, slot)
-	if err != nil {
-		c.logger.
-			WithField("state", stateID).
-			WithField("epoch", epoch).
-			WithField("index", index).
-			WithField("slot", slot).
-			WithError(err).Errorf("GetCommittees failed")
-	}
-
-	return rv, err
+	return c.getCommittees(ctx, stateID, epoch, index, slot)
 }
 
 func (c *Client) getCommittees(ctx context.Context, stateID string, epoch *beaconcommon.Epoch, index *beaconcommon.CommitteeIndex, slot *beaconcommon.Slot) ([]*types.Committee, error) {

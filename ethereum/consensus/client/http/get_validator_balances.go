@@ -12,15 +12,7 @@ import (
 // GetValidatorBalances returns list of validator balances.
 // Set validatorsIDs to filter validator result (if empty no filter is applied)
 func (c *Client) GetValidatorBalances(ctx context.Context, stateID string, validatorIDs []string) ([]*types.ValidatorBalance, error) {
-	rv, err := c.getValidatorBalances(ctx, stateID, validatorIDs)
-	if err != nil {
-		c.logger.
-			WithField("state", stateID).
-			WithField("validators", validatorIDs).
-			WithError(err).Errorf("GetValidatorBalances failed")
-	}
-
-	return rv, err
+	return c.getValidatorBalances(ctx, stateID, validatorIDs)
 }
 
 func (c *Client) getValidatorBalances(ctx context.Context, stateID string, validatorIDs []string) ([]*types.ValidatorBalance, error) {

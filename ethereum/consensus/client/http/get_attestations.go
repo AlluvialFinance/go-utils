@@ -10,12 +10,7 @@ import (
 
 // GetAttestations returns attestations known by the node but not necessarily incorporated into any block.
 func (c *Client) GetAttestations(ctx context.Context) (beaconphase0.Attestations, error) {
-	rv, err := c.getAttestations(ctx)
-	if err != nil {
-		c.logger.WithError(err).Errorf("GetAttestations failed")
-	}
-
-	return rv, err
+	return c.getAttestations(ctx)
 }
 
 func (c *Client) getAttestations(ctx context.Context) (beaconphase0.Attestations, error) {

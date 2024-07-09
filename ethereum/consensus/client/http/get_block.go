@@ -10,14 +10,7 @@ import (
 
 // GetBlock returns block details for given block id.
 func (c *Client) GetBlock(ctx context.Context, blockID string) (*bellatrix.SignedBeaconBlock, error) {
-	rv, err := c.getBlock(ctx, blockID)
-	if err != nil {
-		c.logger.
-			WithField("block", blockID).
-			WithError(err).Errorf("GetBlock failed")
-	}
-
-	return rv, err
+	return c.getBlock(ctx, blockID)
 }
 
 func (c *Client) getBlock(ctx context.Context, blockID string) (*bellatrix.SignedBeaconBlock, error) {

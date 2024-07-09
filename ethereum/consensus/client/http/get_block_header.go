@@ -11,14 +11,7 @@ import (
 
 // GetBlockHeader returns block header for given blockID
 func (c *Client) GetBlockHeader(ctx context.Context, blockID string) (*types.BeaconBlockHeader, error) {
-	rv, err := c.getBlockHeader(ctx, blockID)
-	if err != nil {
-		c.logger.
-			WithField("block", blockID).
-			WithError(err).Errorf("GetBlockHeader failed")
-	}
-
-	return rv, err
+	return c.getBlockHeader(ctx, blockID)
 }
 
 // GetBlockHeader returns block header for given blockID
