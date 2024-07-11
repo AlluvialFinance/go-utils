@@ -5,15 +5,15 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
+	"github.com/protolambda/zrnt/eth2/beacon/capella"
 )
 
 // GetBlock returns block details for given block id.
-func (c *Client) GetBlock(ctx context.Context, blockID string) (*bellatrix.SignedBeaconBlock, error) {
+func (c *Client) GetBlock(ctx context.Context, blockID string) (*capella.SignedBeaconBlock, error) {
 	return c.getBlock(ctx, blockID)
 }
 
-func (c *Client) getBlock(ctx context.Context, blockID string) (*bellatrix.SignedBeaconBlock, error) {
+func (c *Client) getBlock(ctx context.Context, blockID string) (*capella.SignedBeaconBlock, error) {
 	req, err := newGetBlockRequest(ctx, blockID)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlock", nil, "Failure preparing request")
@@ -44,11 +44,11 @@ func newGetBlockRequest(ctx context.Context, blockID string) (*http.Request, err
 }
 
 type getBlockResponseMsg struct {
-	Version string                       `json:"version"`
-	Data    *bellatrix.SignedBeaconBlock `json:"data"`
+	Version string                     `json:"version"`
+	Data    *capella.SignedBeaconBlock `json:"data"`
 }
 
-func inspectGetBlockResponse(resp *http.Response) (*bellatrix.SignedBeaconBlock, error) {
+func inspectGetBlockResponse(resp *http.Response) (*capella.SignedBeaconBlock, error) {
 	msg := new(getBlockResponseMsg)
 	err := inspectResponse(resp, msg)
 	if err != nil {
