@@ -15,8 +15,8 @@ type signedVoluntaryExit struct {
 }
 
 type message struct {
-	Epoch          beaconcommon.Epoch `json:"epoch"`
-	ValidatorIndex string             `json:"validator_index"`
+	Epoch          string `json:"epoch"`
+	ValidatorIndex string `json:"validator_index"`
 }
 
 // SubmitSignedVoluntaryExit submits a signed voluntary exit to the beacon node.
@@ -61,7 +61,7 @@ func newSignedVoluntaryExitsRequest(ctx context.Context, signedVoluntaryExit *si
 func newSignedVoluntaryExit(epoch beaconcommon.Epoch, validatorIdx uint64, signature string) *signedVoluntaryExit {
 	return &signedVoluntaryExit{
 		Message: message{
-			Epoch:          epoch,
+			Epoch:          strconv.Itoa(int(epoch)),
 			ValidatorIndex: strconv.Itoa(int(validatorIdx)),
 		},
 		Signature: signature,
