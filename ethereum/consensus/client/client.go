@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 
-	eth2http "github.com/kilnfi/go-utils/ethereum/consensus/client/http"
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
 
 	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
@@ -103,7 +102,7 @@ type BeaconClient interface {
 	GetVoluntaryExits(ctx context.Context) (beaconphase0.VoluntaryExits, error)
 
 	// SubmitSignedVoluntaryExit submits a signed voluntary exit to the beacon node.
-	SubmitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (*eth2http.SubmitSignedVoluntaryExitResponse, error)
+	SubmitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (string, error)
 }
 
 type NodeClient interface {

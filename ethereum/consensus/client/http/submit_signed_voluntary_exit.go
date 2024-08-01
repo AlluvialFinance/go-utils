@@ -20,13 +20,13 @@ type message struct {
 }
 
 // SubmitSignedVoluntaryExit submits a signed voluntary exit to the beacon node.
-func (c *Client) SubmitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (*SubmitSignedVoluntaryExitResponse, error) {
+func (c *Client) SubmitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (string, error) {
 	resp, err := c.submitSignedVoluntaryExit(ctx, epoch, validatorIdx, signature)
 	if err != nil {
-		c.logger.WithError(err).Errorf("SubmitSignedVoluntaryExit failed")
+		return "", err
 	}
 
-	return resp, err
+	return resp.Message, nil
 }
 
 func (c *Client) submitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (*SubmitSignedVoluntaryExitResponse, error) {
