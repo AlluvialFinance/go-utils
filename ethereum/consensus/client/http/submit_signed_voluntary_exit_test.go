@@ -18,8 +18,8 @@ func TestSubmitSignedVoluntaryExit(t *testing.T) {
 	var (
 		errMsg        = "Invalid voluntary exit, it will never pass validation so it's rejected"
 		errStatusCode = http.StatusBadRequest
-		errBody       = []byte(fmt.Sprintf(`{"code": %d,"message": "%s"}`, errStatusCode, errMsg))
-		respError     = &http.Response{StatusCode: errStatusCode, Body: io.NopCloser(bytes.NewReader(errBody)), Request: &http.Request{Method: http.MethodPost, URL: u}}
+		errBodyMsg    = fmt.Sprintf(`{"code": %d,"message": "%s"}`, errStatusCode, errMsg)
+		respError     = &http.Response{StatusCode: errStatusCode, Body: io.NopCloser(bytes.NewReader([]byte(errBodyMsg))), Request: &http.Request{Method: http.MethodPost, URL: u}}
 	)
 
 	respMsg, err := inspectSubmitSignedVoluntaryExitResponse(respError)
@@ -30,10 +30,10 @@ func TestSubmitSignedVoluntaryExit(t *testing.T) {
 	var (
 		okMsg        = "all right"
 		okStatusCode = http.StatusOK
-		okBody       = []byte(fmt.Sprintf(`{"code": %d,"message": "%s"}`, okStatusCode, okMsg))
+		okBodyMsg    = fmt.Sprintf(`{"code": %d,"message": "%s"}`, okStatusCode, okMsg)
 	)
 
-	respOK := &http.Response{StatusCode: okStatusCode, Body: io.NopCloser(bytes.NewReader(okBody)), Request: &http.Request{Method: http.MethodPost, URL: u}}
+	respOK := &http.Response{StatusCode: okStatusCode, Body: io.NopCloser(bytes.NewReader([]byte(okBodyMsg))), Request: &http.Request{Method: http.MethodPost, URL: u}}
 	respMsg, err = inspectSubmitSignedVoluntaryExitResponse(respOK)
 	require.NoError(t, err)
 	require.NotNil(t, respMsg)
