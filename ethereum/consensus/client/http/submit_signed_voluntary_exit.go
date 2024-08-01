@@ -23,27 +23,27 @@ type message struct {
 func (c *Client) SubmitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (string, error) {
 	resp, err := c.submitSignedVoluntaryExit(ctx, epoch, validatorIdx, signature)
 	if err != nil {
-		c.logger.WithError(err).Errorf("SubmitSignedVoluntaryExit failed")
+		return "", err
 	}
 
-	return resp, err
+	return resp.Message, nil
 }
 
-func (c *Client) submitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (string, error) {
+func (c *Client) submitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (*SubmitSignedVoluntaryExitResponse, error) {
 	reqBody := newSignedVoluntaryExit(epoch, validatorIdx, signature)
 	req, err := newSignedVoluntaryExitsRequest(ctx, reqBody)
 	if err != nil {
-		return "", autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", nil, "Failure preparing request")
+		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", nil, "Failure preparing request")
 	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return "", autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", resp, "Failure sending request")
+		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", resp, "Failure sending request")
 	}
 
 	ve, err := inspectSubmitSignedVoluntaryExitResponse(resp)
 	if err != nil {
-		return "", autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", resp, "Invalid response")
+		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", resp, "Invalid response")
 	}
 
 	return ve, nil
@@ -68,11 +68,16 @@ func newSignedVoluntaryExit(epoch beaconcommon.Epoch, validatorIdx uint64, signa
 	}
 }
 
-func inspectSubmitSignedVoluntaryExitResponse(resp *http.Response) (string, error) {
-	var msg string
-	err := inspectResponse(resp, &msg)
+type SubmitSignedVoluntaryExitResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func inspectSubmitSignedVoluntaryExitResponse(resp *http.Response) (*SubmitSignedVoluntaryExitResponse, error) {
+	msg := new(SubmitSignedVoluntaryExitResponse)
+	err := inspectResponse(resp, msg)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return msg, nil
