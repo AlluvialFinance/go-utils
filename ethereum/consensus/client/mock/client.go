@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	eth2http "github.com/kilnfi/go-utils/ethereum/consensus/client/http"
 	types "github.com/kilnfi/go-utils/ethereum/consensus/types"
 	bellatrix "github.com/protolambda/zrnt/eth2/beacon/bellatrix"
 	common "github.com/protolambda/zrnt/eth2/beacon/common"
@@ -339,10 +340,10 @@ func (mr *MockClientMockRecorder) GetVoluntaryExits(ctx interface{}) *gomock.Cal
 }
 
 // SubmitSignedVoluntaryExit mocks base method.
-func (m *MockClient) SubmitSignedVoluntaryExit(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (string, error) {
+func (m *MockClient) SubmitSignedVoluntaryExit(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (*eth2http.SubmitSignedVoluntaryExitResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SubmitSignedVoluntaryExit", ctx, epoch, validatorIdx, signature)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*eth2http.SubmitSignedVoluntaryExitResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -647,10 +648,10 @@ func (mr *MockBeaconClientMockRecorder) GetVoluntaryExits(ctx interface{}) *gomo
 }
 
 // SubmitSignedVoluntaryExit mocks base method.
-func (m *MockBeaconClient) SubmitSignedVoluntaryExit(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (string, error) {
+func (m *MockBeaconClient) SubmitSignedVoluntaryExit(ctx context.Context, epoch common.Epoch, validatorIdx uint64, signature string) (*eth2http.SubmitSignedVoluntaryExitResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SubmitSignedVoluntaryExit", ctx, epoch, validatorIdx, signature)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*eth2http.SubmitSignedVoluntaryExitResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
