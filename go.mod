@@ -2,8 +2,6 @@ module github.com/kilnfi/go-utils
 
 go 1.22
 
-toolchain go1.23.1
-
 require (
 	github.com/Azure/go-autorest/autorest v0.11.28
 	github.com/docker/cli v23.0.1+incompatible
