@@ -26,10 +26,15 @@ const (
 
 // KeystorePathFlag register flag for the path to the file keystore
 func KeystorePathFlag(v *viper.Viper, f *pflag.FlagSet) {
-	desc := cmdutils.FlagDesc("Directory where to store keys", keyStorePathEnv)
-	f.String(keyStorePathFlag, "", desc)
-	_ = v.BindPFlag(keyStorePathViperKey, f.Lookup(keyStorePathFlag))
-	_ = v.BindEnv(keyStorePathViperKey, keyStorePathEnv)
+
+	f.String(keyStorePathFlag, "", cmdutils.FlagDesc("Directory to store keys", keyStorePathEnv))
+
+	if err := v.BindPFlag(keyStorePathViperKey, f.Lookup(keyStorePathFlag)); err != nil {
+		panic(err)
+	}
+	if err := v.BindEnv(keyStorePathViperKey, keyStorePathEnv); err != nil {
+		panic(err)
+	}
 }
 
 func GetKeystorePath(v *viper.Viper) string {
@@ -44,10 +49,15 @@ const (
 
 // KeystorePasswordFlag register flag for the password used to encrypt keys in keystore
 func KeystorePasswordFlag(v *viper.Viper, f *pflag.FlagSet) {
-	desc := cmdutils.FlagDesc("Password used to encrypt key files", keyStorePasswordEnv)
-	f.String(keyStorePasswordFlag, "", desc)
-	_ = v.BindPFlag(keyStorePasswordViperKey, f.Lookup(keyStorePasswordFlag))
-	_ = v.BindEnv(keyStorePasswordViperKey, keyStorePasswordEnv)
+
+	f.String(keyStorePasswordFlag, "", cmdutils.FlagDesc("Password used to encrypt key files", keyStorePasswordEnv))
+
+	if err := v.BindPFlag(keyStorePasswordViperKey, f.Lookup(keyStorePasswordFlag)); err != nil {
+		panic(err)
+	}
+	if err := v.BindEnv(keyStorePasswordViperKey, keyStorePasswordEnv); err != nil {
+		panic(err)
+	}
 }
 
 func GetKeystorePassword(v *viper.Viper) string {
