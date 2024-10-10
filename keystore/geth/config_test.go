@@ -21,7 +21,9 @@ func TestKeystorePathFlag(t *testing.T) {
 	assert.NotNil(t, flag, "keystore-path flag should be registered")
 
 	// Simulate setting the flag through command-line args
-	f.Set("keystore-path", "/test/keystore")
+	if err := f.Set("keystore-path", "/test/keystore"); err != nil {
+		t.Fatal(err)
+	}
 
 	// Check if the value is correctly bound to Viper
 	assert.Equal(t, "/test/keystore", v.GetString("keystore.path"), "keystore.path should be set correctly from flags")
@@ -42,8 +44,9 @@ func TestKeystorePasswordFlag(t *testing.T) {
 	assert.NotNil(t, flag, "keystore-password flag should be registered")
 
 	// Simulate setting the flag through command-line args
-	f.Set("keystore-password", "supersecret")
-
+	if err := f.Set("keystore-password", "supersecret"); err != nil {
+		t.Fatal(err)
+	}
 	// Check if the value is correctly bound to Viper
 	assert.Equal(t, "supersecret", v.GetString("keystore.password"), "keystore.password should be set correctly from flags")
 
