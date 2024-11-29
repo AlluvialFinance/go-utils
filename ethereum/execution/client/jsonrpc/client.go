@@ -557,5 +557,5 @@ func (c *Client) getBlock(ctx context.Context, method string, args ...interface{
 		}
 		txs[i] = tx.Tx
 	}
-	return gethtypes.NewBlockWithHeader(head).WithBody(txs, uncles), nil
+	return gethtypes.NewBlockWithHeader(head).WithBody(gethtypes.Body{Transactions: txs, Uncles: uncles}), nil
 }
