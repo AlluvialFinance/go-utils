@@ -80,7 +80,7 @@ func (data *DepositData) VerifySignature() (bool, error) {
 	return sig.Verify(root[:], pubkey), nil
 }
 
-// Compute DepositMessage root to be signed
+// SigningRoot computes DepositMessage root to be signed
 func (data *DepositData) SigningRoot() beaconcommon.Root {
 	return beaconcommon.ComputeSigningRoot(
 		data.MessageRoot(),
@@ -139,7 +139,7 @@ func (data *DepositData) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Return the bls domain for deposit
+// DepositDomain returns the bls domain for deposit
 func DepositDomain(version beaconcommon.Version) beaconcommon.BLSDomain {
 	return beaconcommon.ComputeDomain(
 		beaconcommon.DOMAIN_DEPOSIT,
@@ -148,12 +148,7 @@ func DepositDomain(version beaconcommon.Version) beaconcommon.BLSDomain {
 	)
 }
 
-func ValidateDepositData(
-	expectedCreds beaconcommon.Root,
-	expectedVersion beaconcommon.Version,
-	expectedAmount beaconcommon.Gwei,
-	datas ...*DepositData,
-) error {
+func ValidateDepositData(expectedCreds beaconcommon.Root, expectedVersion beaconcommon.Version, expectedAmount beaconcommon.Gwei, datas ...*DepositData) error {
 	for i, data := range datas {
 		tmpData := new(DepositData)
 		*tmpData = *data
@@ -162,6 +157,38 @@ func ValidateDepositData(
 		} else if tmpData.WithdrawalCredentials != expectedCreds {
 			return fmt.Errorf("invalid `withdrawal_credentials` %v at pos %v (expected %v)", tmpData.WithdrawalCredentials, i, expectedCreds)
 		}
+
+		if (tmpData.Version == beaconcommon.Version{}) {
+			tmpData.Version = expectedVersion
+		} else if tmpData.Version != expectedVersion {
+			return fmt.Errorf("invalid `fork_version` %v at pos %v (expected %v)", data.Version, i, expectedVersion)
+		}
+
+		if tmpData.Amount == beaconcommon.Gwei(0) {
+			tmpData.Amount = expectedAmount
+		} else if tmpData.Amount != expectedAmount {
+			return fmt.Errorf("invalid `amount` %v at pos %v (expected %v)", tmpData.Amount, i, expectedAmount)
+		}
+
+		valid, err := tmpData.VerifySignature()
+		if err != nil {
+			return err
+		}
+
+		if !valid {
+			return fmt.Errorf("invalid `signature` for `pubkey` at pos %v", i)
+		}
+	}
+
+	return nil
+}
+
+// ValidateDepositDataWithoutGlobalWithdrawalCredentials validates deposit data without global withdrawal credentials
+// this is used in SMS Interop Protocol where withdrawal credentials are not globally set
+func ValidateDepositDataWithoutGlobalWithdrawalCredentials(expectedVersion beaconcommon.Version, expectedAmount beaconcommon.Gwei, datas ...*DepositData) error {
+	for i, data := range datas {
+		tmpData := new(DepositData)
+		*tmpData = *data
 
 		if (tmpData.Version == beaconcommon.Version{}) {
 			tmpData.Version = expectedVersion
