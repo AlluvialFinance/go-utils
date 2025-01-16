@@ -88,9 +88,10 @@ func Has0xPrefix(input string) bool {
 }
 
 type RPCBlock struct {
-	Hash         common.Hash      `json:"hash"`
-	Transactions []RPCTransaction `json:"transactions"`
-	UncleHashes  []common.Hash    `json:"uncles"`
+	Hash         common.Hash         `json:"hash"`
+	Transactions []RPCTransaction    `json:"transactions"`
+	UncleHashes  []common.Hash       `json:"uncles"`
+	Withdrawals  []*types.Withdrawal `json:"withdrawals,omitempty"`
 }
 
 type RPCTransaction struct {
