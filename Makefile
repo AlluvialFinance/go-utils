@@ -17,7 +17,7 @@ INTEGRATION_COVERAGE_OUT = $(COVERAGE_BUILD_FOLDER)/it_cov.out
 INTEGRATION_COVERAGE_HTML =$(COVERAGE_BUILD_FOLDER)/it_index.html
 
 # Test lint variables
-GOLANGCI_VERSION = v1.48.0
+GOLANGCI_VERSION = v1.62.0
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -36,7 +36,7 @@ build/coverage:
 	@mkdir -p build/coverage
 
 unit-test: build/coverage
-	@go test -covermode=count -coverprofile $(UNIT_COVERAGE_OUT) -v $(PACKAGES)
+	@go test -covermode=count -coverprofile $(UNIT_COVERAGE_OUT) $(PACKAGES)
 
 unit-test-cov: unit-test
 	@go tool cover -html=$(UNIT_COVERAGE_OUT) -o $(UNIT_COVERAGE_HTML)
