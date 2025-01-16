@@ -28,7 +28,7 @@ func (s *senderFromServer) Equal(other gethtypes.Signer) bool {
 	return ok && os.blockhash == s.blockhash
 }
 
-func (s *senderFromServer) Sender(tx *gethtypes.Transaction) (common.Address, error) {
+func (s *senderFromServer) Sender(*gethtypes.Transaction) (common.Address, error) {
 	if s.addr == (common.Address{}) {
 		return common.Address{}, errNotCached
 	}
@@ -38,9 +38,9 @@ func (s *senderFromServer) Sender(tx *gethtypes.Transaction) (common.Address, er
 func (s *senderFromServer) ChainID() *big.Int {
 	panic("can't sign with senderFromServer")
 }
-func (s *senderFromServer) Hash(tx *gethtypes.Transaction) common.Hash {
+func (s *senderFromServer) Hash(*gethtypes.Transaction) common.Hash {
 	panic("can't sign with senderFromServer")
 }
-func (s *senderFromServer) SignatureValues(tx *gethtypes.Transaction, sig []byte) (_, _, _ *big.Int, err error) {
+func (s *senderFromServer) SignatureValues(*gethtypes.Transaction, []byte) (_, _, _ *big.Int, err error) {
 	panic("can't sign with senderFromServer")
 }

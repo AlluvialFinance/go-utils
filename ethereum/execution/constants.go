@@ -10,7 +10,7 @@ var (
 	HoleskyChainID = "17000"
 )
 
-var chainIds = map[string]string{
+var chainIDs = map[string]string{
 	"mainnet": MainnetChainID,
 	"prater":  GoerliChainID, // we add prater to facilitate correspondance with consensus layer
 	"goerli":  GoerliChainID,
@@ -28,7 +28,7 @@ var networks = map[string]string{
 }
 
 func ChainID(network string) (string, error) {
-	if v, ok := chainIds[network]; ok {
+	if v, ok := chainIDs[network]; ok {
 		return v, nil
 	}
 	return "", fmt.Errorf("unknown network %v", network)
