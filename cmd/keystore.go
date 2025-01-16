@@ -33,7 +33,7 @@ func NewCmdKeystore(
 	cmds := &cobra.Command{
 		Use:   "eth1keys SUBCOMMAND",
 		Short: "Commands to securely manage Ethereum execution layer keys",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(*cobra.Command, []string) error {
 			var err error
 			keystoreCtx.keys, err = newKeystore(v)
 			return err
@@ -53,7 +53,7 @@ func newCmdGenerateEth1Key(ctx *keystoreContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate an Ethereum execution layer account",
-		RunE: utils.PrintJSON(func(cmd *cobra.Command, args []string) (res interface{}, err error) {
+		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
 			return ctx.keys.CreateAccount(ctx)
 		}),
 	}
@@ -69,7 +69,7 @@ func newCmdImportEth1Key(ctx *keystoreContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import",
 		Short: "Import the given private key",
-		RunE: utils.PrintJSON(func(cmd *cobra.Command, args []string) (res interface{}, err error) {
+		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
 			return ctx.keys.Import(ctx, pkey)
 		}),
 	}

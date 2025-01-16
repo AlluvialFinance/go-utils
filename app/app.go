@@ -144,7 +144,7 @@ func (app *App) registerBaseMetrics() {
 	app.prometheus.MustRegister(collectors.NewGoCollector())
 }
 
-func (app *App) livecheck(ctx context.Context) error {
+func (app *App) livecheck(context.Context) error {
 	if app.isStatus(statusInitErr) {
 		return fmt.Errorf("app initilalization failed")
 	}
@@ -156,7 +156,7 @@ func (app *App) livecheck(ctx context.Context) error {
 	return nil
 }
 
-func (app *App) readycheck(ctx context.Context) error {
+func (app *App) readycheck(context.Context) error {
 	if app.isStatus("") {
 		return fmt.Errorf("app has not yet been started")
 	}

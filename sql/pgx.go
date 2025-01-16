@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func PGXConnect(ctx context.Context, cfg *Config) (*pgx.Conn, error) {
+func PGXConnect(_ context.Context, cfg *Config) (*pgx.Conn, error) {
 	return pgx.Connect(context.TODO(), cfg.DSN().String())
 }
 

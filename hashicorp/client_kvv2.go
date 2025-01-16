@@ -288,7 +288,7 @@ func extractListData(secret *api.Secret) ([]string, error) {
 	return skeys, nil
 }
 
-func (c *KVv2Client) Delete(ctx context.Context, id string) error {
+func (c *KVv2Client) Delete(context.Context, string) error {
 	return fmt.Errorf("not implemented error")
 }
 

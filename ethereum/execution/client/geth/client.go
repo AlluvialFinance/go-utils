@@ -33,7 +33,7 @@ func NewClient(address string) *Client {
 	}
 }
 
-func (c *Client) Init(ctx context.Context) error {
+func (c *Client) Init(context.Context) error {
 	rpcClient, err := rpc.Dial(c.address)
 	if err != nil {
 		return fmt.Errorf("failed to connect execution layer: %w", err)

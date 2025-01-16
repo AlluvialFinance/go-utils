@@ -266,7 +266,7 @@ func (c *Client) FilterLogs(ctx context.Context, q geth.FilterQuery) ([]gethtype
 }
 
 // SubscribeFilterLogs subscribes to the results of a streaming filter query.
-func (c *Client) SubscribeFilterLogs(ctx context.Context, _ geth.FilterQuery, _ chan<- gethtypes.Log) (geth.Subscription, error) {
+func (c *Client) SubscribeFilterLogs(context.Context, geth.FilterQuery, chan<- gethtypes.Log) (geth.Subscription, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
@@ -364,11 +364,11 @@ func (c *Client) StorageAt(ctx context.Context, account gethcommon.Address, key 
 	return result, err
 }
 
-func (c *Client) SubscribeNewHead(ctx context.Context, ch chan<- *gethtypes.Header) (geth.Subscription, error) {
+func (c *Client) SubscribeNewHead(context.Context, chan<- *gethtypes.Header) (geth.Subscription, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (c *Client) SyncProgress(ctx context.Context) (*geth.SyncProgress, error) {
+func (c *Client) SyncProgress(context.Context) (*geth.SyncProgress, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
@@ -509,6 +509,10 @@ func (c *Client) getBlock(ctx context.Context, method string, args ...interface{
 	if err := json.Unmarshal(raw, &head); err != nil {
 		return nil, err
 	}
+	// When the block is not found, the API returns JSON null.
+	if head == nil {
+		return nil, geth.NotFound
+	}
 	if err := json.Unmarshal(raw, &body); err != nil {
 		return nil, err
 	}
@@ -557,5 +561,10 @@ func (c *Client) getBlock(ctx context.Context, method string, args ...interface{
 		}
 		txs[i] = tx.Tx
 	}
-	return gethtypes.NewBlockWithHeader(head).WithBody(txs, uncles), nil
+	return gethtypes.NewBlockWithHeader(head).WithBody(
+		gethtypes.Body{
+			Transactions: txs,
+			Uncles:       uncles,
+			Withdrawals:  body.Withdrawals,
+		}), nil
 }

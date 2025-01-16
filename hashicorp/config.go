@@ -95,7 +95,7 @@ func (cfg *ClientConfig) ToHashicorpConfig() (*api.Config, error) {
 	// Note that this is sane for the API client as it has its own
 	// redirect handling logic (and thus also for command/meta),
 	// but in e.g. http_test actual redirect handling is necessary
-	config.HttpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	config.HttpClient.CheckRedirect = func(*http.Request, []*http.Request) error {
 		// Returning this value causes the Go net library to not close the
 		// response body and to nil out the error. Otherwise, retry clients may
 		// try three times on every redirect because it sees an error from this

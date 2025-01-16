@@ -15,7 +15,7 @@ func NewCmdAllFlags() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all-flags",
 		Short: "Display all flags (this is a dev command)",
-		Run:   func(cmd *cobra.Command, args []string) {},
+		Run:   func(*cobra.Command, []string) {},
 	}
 
 	// Register flags

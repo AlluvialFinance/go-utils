@@ -32,7 +32,7 @@ func NewCmdEthEL(
 	cmds := &cobra.Command{
 		Use:   "eth-el SUBCOMMAND",
 		Short: "Commands to interact with Ethereum execution layer node",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(*cobra.Command, []string) error {
 			var err error
 			ethELCtx.client, err = newELClient(v)
 			return err
@@ -51,7 +51,7 @@ func newCmdEthELChainID(ctx *ethELContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "chain-id",
 		Short: "Get execution layer chain ID",
-		RunE: utils.PrintJSON(func(cmd *cobra.Command, args []string) (res interface{}, err error) {
+		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
 			return ctx.client.ChainID(ctx)
 		}),
 	}
@@ -63,7 +63,7 @@ func newCmdEthELBlockNumber(ctx *ethELContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocknumber",
 		Short: "Get execution layer chain's head number",
-		RunE: utils.PrintJSON(func(cmd *cobra.Command, args []string) (res interface{}, err error) {
+		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
 			return ctx.client.BlockNumber(ctx)
 		}),
 	}

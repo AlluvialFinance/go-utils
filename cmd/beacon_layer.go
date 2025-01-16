@@ -35,7 +35,7 @@ func NewCmdEthCL(
 	cmds := &cobra.Command{
 		Use:   "eth-cl SUBCOMMAND",
 		Short: "Commands to interact with Ethereum consensus layer node",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(*cobra.Command, []string) error {
 			var err error
 			ethCLCtx.client, err = newCLClient(v)
 			return err
@@ -55,7 +55,7 @@ func newCmdCLSpec(ctx *ethCLContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-spec",
 		Short: "Print validator data",
-		RunE: utils.PrintJSON(func(cmd *cobra.Command, args []string) (res interface{}, err error) {
+		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
 			return ctx.client.GetSpec(ctx)
 		}),
 	}
@@ -71,7 +71,7 @@ func newCmdCLGetValidator(ctx *ethCLContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-validator",
 		Short: "Print validator data",
-		RunE: utils.PrintJSON(func(cmd *cobra.Command, args []string) (res interface{}, err error) {
+		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
 			return ctx.client.GetValidator(ctx, slot.String(), validatorID)
 		}),
 	}

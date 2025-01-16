@@ -156,7 +156,7 @@ func (opt *Config) ToTLSConfig() (*tls.Config, error) {
 	}
 
 	// Set client Auth type
-	if len(opt.ClientAuth) > 0 {
+	if opt.ClientAuth != "" {
 		clientAuth, err := opt.TLSClientAuth()
 		if err != nil {
 			return nil, err

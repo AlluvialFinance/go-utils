@@ -235,7 +235,7 @@ func NewFoundryServiceConfig(opts *FoundryServiceOpts) (*ServiceConfig, error) {
 		Entrypoint:   []string{opts.Entrypoint},
 	}
 
-	isReady := func(ctx context.Context, container *dockertypes.ContainerJSON) error {
+	isReady := func(ctx context.Context, _ *dockertypes.ContainerJSON) error {
 		clt := gethclient.NewClient(fmt.Sprintf("http://127.0.0.1:%v", opts.Port))
 		err := clt.Init(ctx)
 		if err != nil {
