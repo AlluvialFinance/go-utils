@@ -28,6 +28,7 @@ type Client struct {
 func NewClientFromClient(s autorest.Sender) *Client {
 	return &Client{
 		client: s,
+		logger: silentLog, // Disabled (silent) logger by default
 	}
 }
 
@@ -46,7 +47,6 @@ func NewClient(cfg *Config) (*Client, error) {
 	)
 
 	if cfg.DisableLog {
-		c.SetLogger(silentLog)
 		return c, nil
 	}
 
