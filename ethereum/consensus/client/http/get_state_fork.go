@@ -10,14 +10,7 @@ import (
 
 // GetStateFork returns Fork object for state with given stateID
 func (c *Client) GetStateFork(ctx context.Context, stateID string) (*beaconcommon.Fork, error) {
-	rv, err := c.getStateFork(ctx, stateID)
-	if err != nil {
-		c.logger.
-			WithField("state", stateID).
-			WithError(err).Errorf("GetStateFork failed")
-	}
-
-	return rv, err
+	return c.getStateFork(ctx, stateID)
 }
 
 func (c *Client) getStateFork(ctx context.Context, stateID string) (*beaconcommon.Fork, error) {
