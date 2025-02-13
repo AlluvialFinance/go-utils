@@ -1,8 +1,8 @@
 package eth2http
 
 import (
-	"bytes"
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -13,7 +13,7 @@ import (
 )
 
 var silentLog = &logrus.Logger{
-	Out:       &bytes.Buffer{},
+	Out:       io.Discard,
 	Formatter: &logrus.TextFormatter{DisableTimestamp: true},
 	Level:     logrus.PanicLevel,
 }
