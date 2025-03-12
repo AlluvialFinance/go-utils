@@ -7,6 +7,8 @@ import (
 type Config struct {
 	Address string
 
+	DisableLog bool
+
 	HTTP *kilnhttp.ClientConfig
 }
 
@@ -16,6 +18,8 @@ func (cfg *Config) SetDefault() *Config {
 	}
 
 	cfg.HTTP.SetDefault()
+
+	cfg.DisableLog = true // Log disabled by default
 
 	return cfg
 }

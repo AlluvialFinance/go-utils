@@ -2,6 +2,7 @@ package eth2http
 
 import (
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -11,6 +12,12 @@ import (
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
 )
 
+var silentLog = &logrus.Logger{
+	Out:       io.Discard,
+	Formatter: &logrus.TextFormatter{DisableTimestamp: true},
+	Level:     logrus.PanicLevel,
+}
+
 // Client provides methods to connect to an Ethereum 2.0 Beacon chain node
 type Client struct {
 	client autorest.Sender
@@ -19,13 +26,10 @@ type Client struct {
 }
 
 func NewClientFromClient(s autorest.Sender) *Client {
-	c := &Client{
+	return &Client{
 		client: s,
+		logger: silentLog, // Disabled (silent) logger by default
 	}
-
-	c.SetLogger(logrus.StandardLogger())
-
-	return c
 }
 
 // NewClient creates a client connecting to an Ethereum 2.0 Beacon chain node at given addr
@@ -35,12 +39,19 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
-	return NewClientFromClient(
+	c := NewClientFromClient(
 		autorest.Client{
 			Sender:           httpc,
 			RequestInspector: httppreparer.WithBaseURL(cfg.Address),
 		},
-	), nil
+	)
+
+	if cfg.DisableLog {
+		return c, nil
+	}
+
+	c.SetLogger(logrus.StandardLogger())
+	return c, nil
 }
 
 func (c *Client) Logger() logrus.FieldLogger {
