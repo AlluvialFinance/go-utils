@@ -11,12 +11,7 @@ import (
 
 // GetGenesis returns genesis block
 func (c *Client) GetGenesis(ctx context.Context) (*types.Genesis, error) {
-	rv, err := c.getGenesis(ctx)
-	if err != nil {
-		c.logger.WithError(err).Errorf("GetGenesis failed")
-	}
-
-	return rv, err
+	return c.getGenesis(ctx)
 }
 
 func (c *Client) getGenesis(ctx context.Context) (*types.Genesis, error) {
