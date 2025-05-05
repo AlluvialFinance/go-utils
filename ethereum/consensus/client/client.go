@@ -105,7 +105,7 @@ type BeaconClient interface {
 	SubmitSignedVoluntaryExit(ctx context.Context, epoch beaconcommon.Epoch, validatorIdx uint64, signature string) (string, error)
 
 	// GetPendingPartialWithdrawals returns pending partial withdrawals [Pectra]
-	GetPendingPartialWithdrawals(ctx context.Context) ([]*types.PendingPartialWithdrawal, error)
+	GetPendingPartialWithdrawals(ctx context.Context, stateID string) ([]*types.PendingPartialWithdrawal, error)
 }
 
 type NodeClient interface {

@@ -42,7 +42,7 @@ func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *
 
 	mockCli.EXPECT().Gock(req)
 
-	withdrawals, err := c.GetPendingPartialWithdrawals(context.Background())
+	withdrawals, err := c.GetPendingPartialWithdrawals(context.Background(), "head")
 
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(withdrawals))
@@ -58,7 +58,7 @@ func testGetPendingPartialWithdrawalsStatus400(t *testing.T, c *Client, mockCli 
 
 	mockCli.EXPECT().Gock(req)
 
-	_, err := c.GetPendingPartialWithdrawals(context.Background())
+	_, err := c.GetPendingPartialWithdrawals(context.Background(), "head")
 
 	require.Error(t, err)
 }

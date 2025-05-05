@@ -8,8 +8,8 @@ import (
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
 )
 
-func (c *Client) GetPendingPartialWithdrawals(ctx context.Context) ([]*types.PendingPartialWithdrawal, error) {
-	rv, err := c.getPendingPartialWithdrawals(ctx)
+func (c *Client) GetPendingPartialWithdrawals(ctx context.Context, stateID string) ([]*types.PendingPartialWithdrawal, error) {
+	rv, err := c.getPendingPartialWithdrawals(ctx, stateID)
 	if err != nil {
 		c.logger.WithError(err).Errorf("GetPendingPartialWithdrawals failed")
 	}
@@ -17,9 +17,8 @@ func (c *Client) GetPendingPartialWithdrawals(ctx context.Context) ([]*types.Pen
 	return rv, err
 }
 
-func (c *Client) getPendingPartialWithdrawals(ctx context.Context) ([]*types.PendingPartialWithdrawal, error) {
-
-	req, err := newGetPendingPartialWithdrawalsRequest(ctx)
+func (c *Client) getPendingPartialWithdrawals(ctx context.Context, stateID string) ([]*types.PendingPartialWithdrawal, error) {
+	req, err := newGetPendingPartialWithdrawalsRequest(ctx, stateID)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetPendingPartialWithdrawals", nil, "Failure preparing request")
 	}
@@ -35,13 +34,16 @@ func (c *Client) getPendingPartialWithdrawals(ctx context.Context) ([]*types.Pen
 	}
 
 	return result, nil
-
 }
 
-func newGetPendingPartialWithdrawalsRequest(ctx context.Context) (*http.Request, error) {
+func newGetPendingPartialWithdrawalsRequest(ctx context.Context, stateID string) (*http.Request, error) {
+	pathParameters := map[string]interface{}{
+		"stateID": autorest.Encode("path", stateID),
+	}
+
 	return autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithPath("eth/v1/beacon/states/head/pending_partial_withdrawals"),
+		autorest.WithPathParameters("eth/v1/beacon/states/{stateID}/pending_partial_withdrawals", pathParameters),
 	).Prepare(newRequest(ctx))
 }
 
