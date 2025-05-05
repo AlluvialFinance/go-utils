@@ -7,10 +7,3 @@ type PendingPartialWithdrawal struct {
 	Address           common.Address `json:"address"`
 	WithdrawableEpoch uint64         `json:"withdrawable_epoch"`
 }
-
-type WithdrawalsResponse struct {
-	Version             string                      `json:"version"`
-	ExecutionOptimistic bool                        `json:"execution_optimistic"`
-	Finalized           string                      `json:"finalized"`
-	Data                []*PendingPartialWithdrawal `json:"data"`
-}

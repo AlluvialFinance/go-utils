@@ -2,8 +2,6 @@ package eth2http
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -47,11 +45,16 @@ func newGetPendingPartialWithdrawalsRequest(ctx context.Context) (*http.Request,
 	).Prepare(newRequest(ctx))
 }
 
+type getPendingPartialWithdrawalsResponseMsg struct {
+	Data []*types.PendingPartialWithdrawal `json:"data"`
+}
+
 func inspectGetPendingPartialWithdrawalsResponse(resp *http.Response) ([]*types.PendingPartialWithdrawal, error) {
-	var pendingPartialWithdrawals types.WithdrawalsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&pendingPartialWithdrawals); err != nil {
-		return nil, fmt.Errorf("failed to decode pending partial withdrawals: %w", err)
+	msg := new(getPendingPartialWithdrawalsResponseMsg)
+	err := inspectResponse(resp, msg)
+	if err != nil {
+		return nil, err
 	}
 
-	return pendingPartialWithdrawals.Data, nil
+	return msg.Data, nil
 }

@@ -33,9 +33,9 @@ func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *
 		JSON([]byte(`{
 			"data": [
 				{
-					"validator_index": "123",
+					"validator_index": 123,
 					"address": "0x1234567890123456789012345678901234567890",
-					"withdrawable_epoch": "123456"
+					"withdrawable_epoch": 123456
 				}
 			]
 		}`))
