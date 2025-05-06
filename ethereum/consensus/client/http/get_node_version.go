@@ -9,12 +9,7 @@ import (
 
 // GetNodeVersion returns node's version contains informations about the node processing the request
 func (c *Client) GetNodeVersion(ctx context.Context) (string, error) {
-	rv, err := c.getNodeVersion(ctx)
-	if err != nil {
-		c.logger.WithError(err).Errorf("GetNodeVersion failed")
-	}
-
-	return rv, err
+	return c.getNodeVersion(ctx)
 }
 
 func (c *Client) getNodeVersion(ctx context.Context) (string, error) {
