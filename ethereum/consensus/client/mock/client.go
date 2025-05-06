@@ -188,6 +188,21 @@ func (mr *MockClientMockRecorder) GetNodeVersion(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeVersion", reflect.TypeOf((*MockClient)(nil).GetNodeVersion), ctx)
 }
 
+// GetPendingPartialWithdrawals mocks base method.
+func (m *MockClient) GetPendingPartialWithdrawals(ctx context.Context, stateID string) ([]*types.PendingPartialWithdrawal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPendingPartialWithdrawals", ctx, stateID)
+	ret0, _ := ret[0].([]*types.PendingPartialWithdrawal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPendingPartialWithdrawals indicates an expected call of GetPendingPartialWithdrawals.
+func (mr *MockClientMockRecorder) GetPendingPartialWithdrawals(ctx, stateID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPendingPartialWithdrawals", reflect.TypeOf((*MockClient)(nil).GetPendingPartialWithdrawals), ctx, stateID)
+}
+
 // GetProposerSlashings mocks base method.
 func (m *MockClient) GetProposerSlashings(ctx context.Context) (phase0.ProposerSlashings, error) {
 	m.ctrl.T.Helper()
@@ -509,6 +524,21 @@ func (m *MockBeaconClient) GetGenesis(ctx context.Context) (*types.Genesis, erro
 func (mr *MockBeaconClientMockRecorder) GetGenesis(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGenesis", reflect.TypeOf((*MockBeaconClient)(nil).GetGenesis), ctx)
+}
+
+// GetPendingPartialWithdrawals mocks base method.
+func (m *MockBeaconClient) GetPendingPartialWithdrawals(ctx context.Context, stateID string) ([]*types.PendingPartialWithdrawal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPendingPartialWithdrawals", ctx, stateID)
+	ret0, _ := ret[0].([]*types.PendingPartialWithdrawal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPendingPartialWithdrawals indicates an expected call of GetPendingPartialWithdrawals.
+func (mr *MockBeaconClientMockRecorder) GetPendingPartialWithdrawals(ctx, stateID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPendingPartialWithdrawals", reflect.TypeOf((*MockBeaconClient)(nil).GetPendingPartialWithdrawals), ctx, stateID)
 }
 
 // GetProposerSlashings mocks base method.
