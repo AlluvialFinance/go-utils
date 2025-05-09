@@ -7,7 +7,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,9 +32,9 @@ func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *
 		JSON([]byte(`{
 			"data": [
 				{
-					"validator_index": 123,
-					"address": "0x1234567890123456789012345678901234567890",
-					"withdrawable_epoch": 123456
+					"validator_index": "123",
+					"amount": "32000000000",
+					"withdrawable_epoch": "123456"
 				}
 			]
 		}`))
@@ -46,9 +45,9 @@ func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *
 
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(withdrawals))
-	assert.Equal(t, uint64(123), withdrawals[0].ValidatorIndex)
-	assert.Equal(t, common.HexToAddress("0x1234567890123456789012345678901234567890"), withdrawals[0].Address)
-	assert.Equal(t, uint64(123456), withdrawals[0].WithdrawableEpoch)
+	assert.Equal(t, "123", withdrawals[0].ValidatorIndex)
+	assert.Equal(t, "32000000000", withdrawals[0].Amount)
+	assert.Equal(t, "123456", withdrawals[0].WithdrawableEpoch)
 }
 
 func testGetPendingPartialWithdrawalsStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
