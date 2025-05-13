@@ -45,11 +45,11 @@ func (cfg *Config) SetDefault() *Config {
 	}
 	cfg.Healthz.SetDefault()
 
-	if cfg.StartTimeout == nil {
+	if cfg.StartTimeout == nil || cfg.StartTimeout.Duration == 0 {
 		cfg.StartTimeout = &types.Duration{Duration: 10 * time.Second}
 	}
 
-	if cfg.StopTimeout == nil {
+	if cfg.StopTimeout == nil || cfg.StopTimeout.Duration == 0 {
 		cfg.StopTimeout = &types.Duration{Duration: 10 * time.Second}
 	}
 
