@@ -13,16 +13,7 @@ import (
 // GetValidators returns list of validators
 // Set validatorsIDs and/or statuses to filter result (if empty no filter is applied)
 func (c *Client) GetValidators(ctx context.Context, stateID string, validatorIDs, statuses []string) ([]*types.Validator, error) {
-	rv, err := c.getValidators(ctx, stateID, validatorIDs, statuses)
-	if err != nil {
-		c.logger.
-			WithField("state", stateID).
-			WithField("validator.ids", validatorIDs).
-			WithField("statuses", statuses).
-			WithError(err).Errorf("GetValidators failed")
-	}
-
-	return rv, err
+	return c.getValidators(ctx, stateID, validatorIDs, statuses)
 }
 
 func (c *Client) getValidators(ctx context.Context, stateID string, validatorIDs, statuses []string) ([]*types.Validator, error) {

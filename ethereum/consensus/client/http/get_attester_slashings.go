@@ -10,12 +10,7 @@ import (
 
 // GetAttesterSlashings returns attester slashings known by the node but not necessarily incorporated into any block.
 func (c *Client) GetAttesterSlashings(ctx context.Context) (beaconphase0.AttesterSlashings, error) {
-	rv, err := c.getAttesterSlashings(ctx)
-	if err != nil {
-		c.logger.WithError(err).Errorf("GetAttesterSlashings failed")
-	}
-
-	return rv, err
+	return c.getAttesterSlashings(ctx)
 }
 
 func (c *Client) getAttesterSlashings(ctx context.Context) (beaconphase0.AttesterSlashings, error) {
