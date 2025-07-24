@@ -96,8 +96,10 @@ func NewRunCmd(ctx context.Context) *cobra.Command {
 ### `myservice.go`
 
 ```go
-// optional; wrap interfaces to implement service lifecycle methods
-// the compiler will help you understand which methods to implement
+// Implement any combination of lifecycle interfaces as needed for your service
+// The Go compiler will indicate which methods are required based on the interfaces you choose
+// Select interfaces according to the responsibilities of your service
+// Possible interfaces include: Loggable, Initializable, Runnable, Closable, API, Middleware, Checkable, Measurable
 type Service interface {
     app.Runnable
     app.Initializable
