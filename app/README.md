@@ -84,10 +84,10 @@ func NewRunCmd(ctx context.Context) *cobra.Command {
                 return err
             }
 
-            svc := NewMyService()
+            svc := NewMyService() // <- notice we don't explicitly call SetLogger, Init, Start, Stop, Close
             app.RegisterService(svc)
 
-            return app.Run()
+            return app.Run() // <- this will iterate over all registered services and call their lifecycle methods
         },
     }
 }
