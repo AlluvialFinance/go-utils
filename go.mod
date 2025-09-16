@@ -33,7 +33,7 @@ require (
 	github.com/wealdtech/go-eth2-types/v2 v2.8.0
 	github.com/wealdtech/go-eth2-util v1.8.0
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.3.0
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 	golang.org/x/time v0.9.0
 	gopkg.in/h2non/gock.v1 v1.1.2
 	gorm.io/driver/postgres v1.4.8
