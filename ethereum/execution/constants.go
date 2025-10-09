@@ -3,31 +3,34 @@ package ethel
 import "fmt"
 
 var (
-	MainnetChainID = "1"
-	RopstenChainID = "3"
-	GoerliChainID  = "5"
-	SepoliaChainID = "11155111"
-	HoleskyChainID = "17000"
-	HoodiChainID   = "560048"
+	MainnetChainID  = "1"
+	RopstenChainID  = "3"
+	GoerliChainID   = "5"
+	SepoliaChainID  = "11155111"
+	HoleskyChainID  = "17000"
+	HoodiChainID    = "560048"
+	KurtosisChainID = "3151908"
 )
 
 var chainIDs = map[string]string{
-	"mainnet": MainnetChainID,
-	"prater":  GoerliChainID, // we add prater to facilitate correspondance with consensus layer
-	"goerli":  GoerliChainID,
-	"sepolia": SepoliaChainID,
-	"ropsten": RopstenChainID,
-	"holesky": HoleskyChainID,
-	"hoodi":   HoodiChainID,
+	"mainnet":  MainnetChainID,
+	"prater":   GoerliChainID, // we add prater to facilitate correspondance with consensus layer
+	"goerli":   GoerliChainID,
+	"sepolia":  SepoliaChainID,
+	"ropsten":  RopstenChainID,
+	"holesky":  HoleskyChainID,
+	"hoodi":    HoodiChainID,
+	"kurtosis": KurtosisChainID,
 }
 
 var networks = map[string]string{
-	MainnetChainID: "mainnet",
-	GoerliChainID:  "goerli",
-	SepoliaChainID: "sepolia",
-	RopstenChainID: "ropsten",
-	HoleskyChainID: "holesky",
-	HoodiChainID:   "hoodi",
+	MainnetChainID:  "mainnet",
+	GoerliChainID:   "goerli",
+	SepoliaChainID:  "sepolia",
+	RopstenChainID:  "ropsten",
+	HoleskyChainID:  "holesky",
+	HoodiChainID:    "hoodi",
+	KurtosisChainID: "kurtosis",
 }
 
 func ChainID(network string) (string, error) {

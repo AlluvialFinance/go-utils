@@ -7,31 +7,34 @@ import (
 )
 
 var (
-	MainnetForkVersion = beaconcommon.Version{0x00, 0x00, 0x00, 0x00}
-	PraterForkVersion  = beaconcommon.Version{0x00, 0x00, 0x10, 0x20}
-	SepoliaForkVersion = beaconcommon.Version{0x90, 0x00, 0x00, 0x69}
-	RopstenForkVersion = beaconcommon.Version{0x80, 0x00, 0x00, 0x69}
-	HoleskyForkVersion = beaconcommon.Version{0x01, 0x01, 0x70, 0x00}
-	HoodiForkVersion   = beaconcommon.Version{0x10, 0x00, 0x09, 0x10}
+	MainnetForkVersion  = beaconcommon.Version{0x00, 0x00, 0x00, 0x00}
+	PraterForkVersion   = beaconcommon.Version{0x00, 0x00, 0x10, 0x20}
+	SepoliaForkVersion  = beaconcommon.Version{0x90, 0x00, 0x00, 0x69}
+	RopstenForkVersion  = beaconcommon.Version{0x80, 0x00, 0x00, 0x69}
+	HoleskyForkVersion  = beaconcommon.Version{0x01, 0x01, 0x70, 0x00}
+	HoodiForkVersion    = beaconcommon.Version{0x10, 0x00, 0x09, 0x10}
+	KurtosisForkVersion = beaconcommon.Version{0x10, 0x00, 0x00, 0x38}
 )
 
 var forkVersions = map[string]beaconcommon.Version{
-	"mainnet": MainnetForkVersion,
-	"prater":  PraterForkVersion,
-	"goerli":  PraterForkVersion, // we add goerli to facilitate correspondance with exec layer
-	"sepolia": SepoliaForkVersion,
-	"ropsten": RopstenForkVersion,
-	"holesky": HoleskyForkVersion,
-	"hoodi":   HoodiForkVersion,
+	"mainnet":  MainnetForkVersion,
+	"prater":   PraterForkVersion,
+	"goerli":   PraterForkVersion, // we add goerli to facilitate correspondance with exec layer
+	"sepolia":  SepoliaForkVersion,
+	"ropsten":  RopstenForkVersion,
+	"holesky":  HoleskyForkVersion,
+	"hoodi":    HoodiForkVersion,
+	"kurtosis": KurtosisForkVersion,
 }
 
 var networks = map[string]string{
-	MainnetForkVersion.String(): "mainnet",
-	PraterForkVersion.String():  "prater",
-	SepoliaForkVersion.String(): "sepolia",
-	RopstenForkVersion.String(): "ropsten",
-	HoleskyForkVersion.String(): "holesky",
-	HoodiForkVersion.String():   "hoodi",
+	MainnetForkVersion.String():  "mainnet",
+	PraterForkVersion.String():   "prater",
+	SepoliaForkVersion.String():  "sepolia",
+	RopstenForkVersion.String():  "ropsten",
+	HoleskyForkVersion.String():  "holesky",
+	HoodiForkVersion.String():    "hoodi",
+	KurtosisForkVersion.String(): "kurtosis",
 }
 
 func ForkVersion(network string) (beaconcommon.Version, error) {
