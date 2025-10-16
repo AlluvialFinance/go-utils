@@ -40,12 +40,12 @@ func (m *mockShutdownAwareService) SetShutdownRequester(sr ShutdownRequester) {
 	m.shutdownRequester = sr
 }
 
-func (m *mockShutdownAwareService) Init(ctx context.Context) error {
+func (m *mockShutdownAwareService) Init(_ context.Context) error {
 	m.initCalled = true
 	return nil
 }
 
-func (m *mockShutdownAwareService) Start(ctx context.Context) error {
+func (m *mockShutdownAwareService) Start(_ context.Context) error {
 	m.startCalled = true
 
 	// If configured to trigger shutdown, do it in a goroutine after start
@@ -63,7 +63,7 @@ func (m *mockShutdownAwareService) Start(ctx context.Context) error {
 	return nil
 }
 
-func (m *mockShutdownAwareService) Stop(ctx context.Context) error {
+func (m *mockShutdownAwareService) Stop(_ context.Context) error {
 	m.stopCalled = true
 	return nil
 }
