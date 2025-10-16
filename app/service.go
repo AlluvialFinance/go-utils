@@ -50,3 +50,26 @@ type Checkable interface {
 type Measurable interface {
 	RegisterMetrics(prometheus.Registerer) error
 }
+
+// ShutdownRequest carries context for a shutdown request.
+type ShutdownRequest struct {
+	Reason string // human-readable reason
+	Err    error  // optional: underlying error
+	Source string // optional: which service triggered it
+}
+
+// ShutdownRequester is what services use to request app shutdown.
+type ShutdownRequester interface {
+	RequestShutdown(ShutdownRequest)
+}
+
+// ShutdownAware is implemented by services that want a ShutdownRequester injected.
+type ShutdownAware interface {
+	SetShutdownRequester(ShutdownRequester)
+}
+
+// ShutdownFunc is a function adapter that satisfies ShutdownRequester.
+// Use this when injecting into services to avoid handing them *App.
+type ShutdownFunc func(ShutdownRequest)
+
+func (f ShutdownFunc) RequestShutdown(r ShutdownRequest) { f(r) }

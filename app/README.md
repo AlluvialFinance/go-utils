@@ -22,7 +22,8 @@ Services can optionally implement the following interfaces from `app/service.go`
 | `API`           | Registers HTTP routes                                                   |
 | `Middleware`    | Adds HTTP middlewares                                                   |
 | `Checkable`     | Exposes health checks                                                   |
-| `Measurable`    | Registers Prometheus metrics                                             |
+| `Measurable`    | Registers Prometheus metrics                                            |
+| `ShutdownAware` | Receives a shutdown requester to trigger graceful app shutdown          |
 
 The app detects and invokes these interfaces at appropriate stages in the lifecycle.
 
@@ -100,7 +101,7 @@ func NewRunCmd(ctx context.Context) *cobra.Command {
 // implement any combination of lifecycle interfaces as needed for your service
 // the Go compiler will indicate which methods are required based on the interfaces you choose
 // select interfaces according to the responsibilities of your service
-// possible interfaces include: Loggable, Initializable, Runnable, Closable, API, Middleware, Checkable, Measurable
+// possible interfaces include: Loggable, Initializable, Runnable, Closable, API, Middleware, Checkable, Measurable, ShutdownAware
 type Service interface {
     app.Runnable
     app.Initializable
@@ -146,12 +147,106 @@ func (s *MyService) Close() error {
 }
 ```
 
+---
+
+## 🛑 Graceful Shutdown from Within a Service
+
+Services can request a graceful shutdown of the entire application by implementing the `ShutdownAware` interface. This is useful when a service encounters a fatal error or condition that requires the app to stop.
+
+### Example: Service with Shutdown Capability
+
+```go
+type MonitoringService struct {
+    log               *logrus.Logger
+    shutdownRequester app.ShutdownRequester
+}
+
+func NewMonitoringService() *MonitoringService {
+    return &MonitoringService{}
+}
+
+// SetLogger implements app.Loggable
+func (s *MonitoringService) SetLogger(logger *logrus.Logger) {
+    s.log = logger
+}
+
+// SetShutdownRequester implements app.ShutdownAware
+func (s *MonitoringService) SetShutdownRequester(sr app.ShutdownRequester) {
+    s.shutdownRequester = sr
+}
+
+// Init implements app.Initializable
+func (s *MonitoringService) Init(ctx context.Context) error {
+    s.log.Info("Initializing monitoring service...")
+    return nil
+}
+
+// Start implements app.Runnable
+func (s *MonitoringService) Start(ctx context.Context) error {
+    go s.monitor(ctx)
+    return nil
+}
+
+func (s *MonitoringService) monitor(ctx context.Context) {
+    ticker := time.NewTicker(10 * time.Second)
+    defer ticker.Stop()
+
+    for {
+        select {
+        case <-ctx.Done():
+            return
+        case <-ticker.C:
+            if err := s.checkHealth(); err != nil {
+                s.log.WithError(err).Error("Health check failed - requesting shutdown")
+                
+                // Request graceful shutdown with context
+                s.shutdownRequester.RequestShutdown(app.ShutdownRequest{
+                    Reason: "health check failed",
+                    Err:    err,
+                    Source: "MonitoringService",
+                })
+                return
+            }
+        }
+    }
+}
+
+func (s *MonitoringService) checkHealth() error {
+    // Your health check logic here
+    return nil
+}
+
+// Stop implements app.Runnable
+func (s *MonitoringService) Stop(ctx context.Context) error {
+    s.log.Info("Stopping monitoring service...")
+    return nil
+}
+```
+
+### How It Works
+
+1. **Injection**: When you register a service that implements `ShutdownAware`, the framework automatically calls `SetShutdownRequester` during initialization.
+
+2. **Shutdown Request**: When your service needs to shut down the app, call `shutdownRequester.RequestShutdown()` with a `ShutdownRequest` containing:
+   - `Reason`: Human-readable explanation of why shutdown was requested
+   - `Err`: Optional underlying error that triggered the shutdown
+   - `Source`: Name of the service requesting shutdown (for debugging)
+
+3. **Graceful Shutdown**: The app will:
+   - Log the shutdown request with all context information
+   - Stop all running services in reverse order
+   - Close all resources
+   - Exit cleanly
+
+> 💡 **Tip**: The shutdown mechanism uses `sync.Once` internally, so multiple shutdown requests are safe - only the first one will be processed.
+
+---
 
 ## 🔄 Automation Highlights
 
 Once a service is registered via `app.RegisterService(...)`, the framework **automatically** handles:
 
-- Calling `SetLogger`, `Init`, `Start`, `Stop`, and `Close` on services implementing the corresponding interfaces.
+- Calling `SetLogger`, `SetShutdownRequester`, `Init`, `Start`, `Stop`, and `Close` on services implementing the corresponding interfaces.
 - Context propagation across all services.
 - OS signal handling (e.g., SIGINT, SIGTERM) to trigger graceful shutdown.
 
