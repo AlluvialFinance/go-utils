@@ -63,7 +63,6 @@ type App struct {
 	done         chan os.Signal
 	shutdownCh   chan ShutdownRequest
 	shutdownOnce sync.Once
-	cancel       context.CancelFunc
 }
 
 // New creates a new App
