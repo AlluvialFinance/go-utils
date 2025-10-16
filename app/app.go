@@ -60,7 +60,9 @@ type App struct {
 	statusMux sync.Mutex
 	status    string
 
-	done chan os.Signal
+	done         chan os.Signal
+	shutdownCh   chan ShutdownRequest
+	shutdownOnce sync.Once
 }
 
 // New creates a new App
@@ -97,6 +99,7 @@ func New(cfg *Config) (*App, error) {
 		prometheus:   prometheus.NewRegistry(),
 		logger:       logger,
 		done:         make(chan os.Signal, 1),
+		shutdownCh:   make(chan ShutdownRequest, 1),
 	}, nil
 }
 
@@ -174,6 +177,15 @@ func (app *App) readycheck(context.Context) error {
 	}
 
 	return nil
+}
+
+func (app *App) requestShutdown(req ShutdownRequest) {
+	app.shutdownOnce.Do(func() {
+		select {
+		case app.shutdownCh <- req:
+		default: // already requested; drop
+		}
+	})
 }
 
 // RegisterService register a Service on App
@@ -282,6 +294,11 @@ func (app *App) initServices(ctx context.Context) error {
 				break
 			}
 		}
+
+		if sa, ok := svc.(ShutdownAware); ok {
+			sa.SetShutdownRequester(ShutdownFunc(app.requestShutdown))
+		}
+
 	}
 
 	if err != nil {
@@ -391,10 +408,13 @@ func (app *App) run() error {
 		return err
 	}
 
+	// Wait for something to end the party
 	select {
-	case sig := <-app.done:
+	case req := <-app.shutdownCh: // handle a shutdown request
+		app.logger.WithFields(logrus.Fields{"reason": req.Reason, "err": req.Err, "source": req.Source}).Warn("shutdown requested")
+	case sig := <-app.done: // handle a termination signal
 		app.logger.WithField("signal", sig.String()).Errorf("received termination signal")
-	case <-app.server.Done():
+	case <-app.server.Done(): // handle a server error
 		app.logger.WithError(app.server.Error()).Errorf("server error")
 	}
 
