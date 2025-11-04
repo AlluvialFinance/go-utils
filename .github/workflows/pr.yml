@@ -5,7 +5,7 @@ on:
       - '**.md'
       - .gitignore
 env:
-  GO_VERSION: "1.23"
+  GO_VERSION: "1.24.9"
 jobs:
   unit-tests:
     name: 'Unit tests in ${{ matrix.os }}'
