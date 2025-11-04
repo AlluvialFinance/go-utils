@@ -10,12 +10,7 @@ import (
 
 // GetProposerSlashings returns proposer slashings known by the node but not necessarily incorporated into any block.
 func (c *Client) GetProposerSlashings(ctx context.Context) (beaconphase0.ProposerSlashings, error) {
-	rv, err := c.getProposerSlashings(ctx)
-	if err != nil {
-		c.logger.WithError(err).Errorf("GetProposerSlashings failed")
-	}
-
-	return rv, err
+	return c.getProposerSlashings(ctx)
 }
 
 func (c *Client) getProposerSlashings(ctx context.Context) (beaconphase0.ProposerSlashings, error) {
