@@ -8,6 +8,7 @@ import (
 	dockerref "github.com/docker/distribution/reference"
 	dockertypes "github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
+	dockerimage "github.com/docker/docker/api/types/image"
 	dockernetwork "github.com/docker/docker/api/types/network"
 	dockervolume "github.com/docker/docker/api/types/volume"
 	docker "github.com/docker/docker/client"
@@ -99,7 +100,7 @@ func (c *Compose) name(name string) string {
 	return fmt.Sprintf("%v_%v", c.cfg.Namespace, name)
 }
 
-func (c *Compose) RegisterNetwork(name string, cfg *dockertypes.NetworkCreate) {
+func (c *Compose) RegisterNetwork(name string, cfg *dockernetwork.CreateOptions) {
 	c.networks = append(c.networks, &network{
 		name: c.name(name),
 		cfg:  cfg,
@@ -108,7 +109,7 @@ func (c *Compose) RegisterNetwork(name string, cfg *dockertypes.NetworkCreate) {
 
 type network struct {
 	name string
-	cfg  *dockertypes.NetworkCreate
+	cfg  *dockernetwork.CreateOptions
 
 	id  string
 	err error
@@ -318,7 +319,7 @@ func (c *Compose) pullImage(ctx context.Context, image string) error {
 		return err
 	}
 
-	options := dockertypes.ImagePullOptions{
+	options := dockerimage.PullOptions{
 		RegistryAuth: "", // TODO: deal with docker registry authentication
 	}
 
@@ -396,7 +397,7 @@ func (c *Compose) removeContainer(ctx context.Context, svc *service) error {
 		err := c.dockerc.ContainerRemove(
 			ctx,
 			svc.id,
-			dockertypes.ContainerRemoveOptions{},
+			dockercontainer.RemoveOptions{},
 		)
 		if err != nil {
 			logger.WithError(err).Errorf("failed to remove container")
@@ -432,7 +433,7 @@ func (c *Compose) startContainer(ctx context.Context, svc *service) error {
 		err := c.dockerc.ContainerStart(
 			ctx,
 			svc.id,
-			dockertypes.ContainerStartOptions{},
+			dockercontainer.StartOptions{},
 		)
 		if err != nil {
 			svc.err = err
