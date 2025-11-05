@@ -13,15 +13,7 @@ import (
 // GetBlockHeaders return block headers
 // Set slot and/or parentRoot to filter result (if nil no filter is applied)
 func (c *Client) GetBlockHeaders(ctx context.Context, slot *beaconcommon.Slot, parentRoot *beaconcommon.Root) ([]*types.BeaconBlockHeader, error) {
-	rv, err := c.getBlockHeaders(ctx, slot, parentRoot)
-	if err != nil {
-		c.logger.
-			WithField("slot", slot).
-			WithField("parent.root", parentRoot).
-			WithError(err).Errorf("GetBlockHeaders failed")
-	}
-
-	return rv, err
+	return c.getBlockHeaders(ctx, slot, parentRoot)
 }
 
 func (c *Client) getBlockHeaders(ctx context.Context, slot *beaconcommon.Slot, parentRoot *beaconcommon.Root) ([]*types.BeaconBlockHeader, error) {
