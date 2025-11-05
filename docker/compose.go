@@ -6,7 +6,6 @@ import (
 	"time"
 
 	dockerref "github.com/docker/distribution/reference"
-	dockertypes "github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
 	dockerimage "github.com/docker/docker/api/types/image"
 	dockernetwork "github.com/docker/docker/api/types/network"
@@ -21,7 +20,7 @@ type Compose struct {
 
 	logger logrus.FieldLogger
 
-	dockerc docker.CommonAPIClient
+	dockerc docker.APIClient
 
 	services []*service
 	volumes  []*volume
@@ -73,11 +72,11 @@ func (c *Compose) Up(ctx context.Context) error {
 
 func (c *Compose) Down(ctx context.Context) error {
 	var rErr error
-	if err := c.stopContainers(ctx); rErr == nil && err != nil {
+	if err := c.stopContainers(ctx); err != nil {
 		rErr = err
 	}
 
-	if err := c.removeContainers(ctx); err != nil {
+	if err := c.removeContainers(ctx); rErr == nil && err != nil {
 		rErr = err
 	}
 
@@ -246,7 +245,7 @@ type ServiceConfig struct {
 	Container  *dockercontainer.Config
 	Host       *dockercontainer.HostConfig
 	Networking *dockernetwork.NetworkingConfig
-	IsReady    func(context.Context, *dockertypes.ContainerJSON) error
+	IsReady    func(context.Context, *dockercontainer.InspectResponse) error
 	DependsOn  []string
 }
 
@@ -265,7 +264,7 @@ func (c *Compose) RegisterService(name string, cfg *ServiceConfig) {
 	})
 }
 
-func (c *Compose) GetContainer(ctx context.Context, name string) (*dockertypes.ContainerJSON, error) {
+func (c *Compose) GetContainer(ctx context.Context, name string) (*dockercontainer.InspectResponse, error) {
 	svc, err := c.getService(name)
 	if err != nil {
 		return nil, err
@@ -274,7 +273,7 @@ func (c *Compose) GetContainer(ctx context.Context, name string) (*dockertypes.C
 	return c.getContainer(ctx, svc)
 }
 
-func (c *Compose) getContainer(ctx context.Context, svc *service) (*dockertypes.ContainerJSON, error) {
+func (c *Compose) getContainer(ctx context.Context, svc *service) (*dockercontainer.InspectResponse, error) {
 	if svc.err != nil {
 		return nil, svc.err
 	}

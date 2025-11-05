@@ -1,7 +1,6 @@
 package docker
 
 import (
-	dockerapi "github.com/docker/docker/api"
 	docker "github.com/docker/docker/client"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 )
@@ -22,9 +21,9 @@ func (cfg *ClientConfig) SetDefault() *ClientConfig {
 		cfg.Host = docker.DefaultDockerHost
 	}
 
-	if cfg.Version == "" {
-		cfg.Version = dockerapi.DefaultVersion
-	}
+	// Leave Version empty by default to enable API version negotiation
+	// This allows the Docker client to automatically negotiate with the daemon
+	// and avoids version mismatch issues between different Docker environments
 
 	return cfg
 }

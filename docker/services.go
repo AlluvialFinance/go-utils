@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	dockertypes "github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	_ "github.com/jackc/pgx/v5/stdlib" // imported so pgx sql driver is registered
@@ -42,7 +41,7 @@ func (opts *PostgresServiceOpts) SetDefault() *PostgresServiceOpts {
 }
 
 // SQLConfig returns an SQL config to connect to the postgres container from the host
-func (opts *PostgresServiceOpts) SQLConfig(container *dockertypes.ContainerJSON) (*kilnsql.Config, error) {
+func (opts *PostgresServiceOpts) SQLConfig(container *dockercontainer.InspectResponse) (*kilnsql.Config, error) {
 	portBindings, err := GetPortBindings("5432", container)
 	if err != nil {
 		return nil, err
@@ -84,7 +83,7 @@ func NewPostgresServiceConfig(opts *PostgresServiceOpts) (*ServiceConfig, error)
 		PortBindings: portBindings,
 	}
 
-	isReady := func(ctx context.Context, container *dockertypes.ContainerJSON) error {
+	isReady := func(ctx context.Context, container *dockercontainer.InspectResponse) error {
 		sqlCfg, err := opts.SQLConfig(container)
 		if err != nil {
 			return err
@@ -122,7 +121,7 @@ func (opts *TraefikServiceOpts) SetDefault() *TraefikServiceOpts {
 }
 
 // Addr returns address to connect to the traefik container from the host
-func (opts *TraefikServiceOpts) Addr(container *dockertypes.ContainerJSON) (string, error) {
+func (opts *TraefikServiceOpts) Addr(container *dockercontainer.InspectResponse) (string, error) {
 	portBindings, err := GetPortBindings("80", container)
 	if err != nil {
 		return "", err
@@ -163,7 +162,7 @@ func NewTreafikServiceConfig(opts *TraefikServiceOpts) (*ServiceConfig, error) {
 		Binds:        binds,
 	}
 
-	isReady := func(ctx context.Context, container *dockertypes.ContainerJSON) error {
+	isReady := func(ctx context.Context, container *dockercontainer.InspectResponse) error {
 		addr, err := opts.Addr(container)
 		if err != nil {
 			return err
@@ -235,7 +234,7 @@ func NewFoundryServiceConfig(opts *FoundryServiceOpts) (*ServiceConfig, error) {
 		Entrypoint:   []string{opts.Entrypoint},
 	}
 
-	isReady := func(ctx context.Context, _ *dockertypes.ContainerJSON) error {
+	isReady := func(ctx context.Context, _ *dockercontainer.InspectResponse) error {
 		clt := gethclient.NewClient(fmt.Sprintf("http://127.0.0.1:%v", opts.Port))
 		err := clt.Init(ctx)
 		if err != nil {

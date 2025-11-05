@@ -271,7 +271,7 @@ func (c *Client) SubscribeFilterLogs(context.Context, geth.FilterQuery, chan<- g
 }
 
 // SubscribeTransactionReceipts subscribes to the results of a streaming transaction receipt query.
-func (c *Client) SubscribeTransactionReceipts(ctx context.Context, _ *geth.TransactionReceiptsQuery, _ chan<- []*gethtypes.Receipt) (geth.Subscription, error) {
+func (c *Client) SubscribeTransactionReceipts(_ context.Context, _ *geth.TransactionReceiptsQuery, _ chan<- []*gethtypes.Receipt) (geth.Subscription, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

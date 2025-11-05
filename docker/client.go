@@ -29,7 +29,14 @@ func NewClient(cfg *ClientConfig) (*docker.Client, error) {
 	opts := []docker.Opt{
 		docker.WithHTTPClient(httpc),
 		docker.WithHost(cfg.Host),
-		docker.WithVersion(cfg.Version),
+	}
+
+	// Use API version negotiation if no specific version is configured
+	// This allows the client to automatically negotiate with the daemon
+	if cfg.Version == "" {
+		opts = append(opts, docker.WithAPIVersionNegotiation())
+	} else {
+		opts = append(opts, docker.WithVersion(cfg.Version))
 	}
 
 	return docker.NewClientWithOpts(opts...)
