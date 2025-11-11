@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/docker/cli/cli/compose/loader"
-	dockertypes "github.com/docker/docker/api/types"
+	dockercontainer "github.com/docker/docker/api/types/container"
 	dockermount "github.com/docker/docker/api/types/mount"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
@@ -46,7 +46,7 @@ func ParseVolumes(specs ...string) (volumes map[string]struct{}, binds []string,
 }
 
 // GetPortBindings returns the list of port binding to access container on given port
-func GetPortBindings(port string, container *dockertypes.ContainerJSON) ([]nat.PortBinding, error) {
+func GetPortBindings(port string, container *dockercontainer.InspectResponse) ([]nat.PortBinding, error) {
 	proto := "tcp"
 	parts := strings.SplitN(port, "/", 2)
 

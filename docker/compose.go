@@ -6,8 +6,8 @@ import (
 	"time"
 
 	dockerref "github.com/docker/distribution/reference"
-	dockertypes "github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
+	dockerimage "github.com/docker/docker/api/types/image"
 	dockernetwork "github.com/docker/docker/api/types/network"
 	dockervolume "github.com/docker/docker/api/types/volume"
 	docker "github.com/docker/docker/client"
@@ -20,7 +20,7 @@ type Compose struct {
 
 	logger logrus.FieldLogger
 
-	dockerc docker.CommonAPIClient
+	dockerc docker.APIClient
 
 	services []*service
 	volumes  []*volume
@@ -72,11 +72,11 @@ func (c *Compose) Up(ctx context.Context) error {
 
 func (c *Compose) Down(ctx context.Context) error {
 	var rErr error
-	if err := c.stopContainers(ctx); rErr == nil && err != nil {
+	if err := c.stopContainers(ctx); err != nil {
 		rErr = err
 	}
 
-	if err := c.removeContainers(ctx); err != nil {
+	if err := c.removeContainers(ctx); rErr == nil && err != nil {
 		rErr = err
 	}
 
@@ -99,7 +99,7 @@ func (c *Compose) name(name string) string {
 	return fmt.Sprintf("%v_%v", c.cfg.Namespace, name)
 }
 
-func (c *Compose) RegisterNetwork(name string, cfg *dockertypes.NetworkCreate) {
+func (c *Compose) RegisterNetwork(name string, cfg *dockernetwork.CreateOptions) {
 	c.networks = append(c.networks, &network{
 		name: c.name(name),
 		cfg:  cfg,
@@ -108,7 +108,7 @@ func (c *Compose) RegisterNetwork(name string, cfg *dockertypes.NetworkCreate) {
 
 type network struct {
 	name string
-	cfg  *dockertypes.NetworkCreate
+	cfg  *dockernetwork.CreateOptions
 
 	id  string
 	err error
@@ -245,7 +245,7 @@ type ServiceConfig struct {
 	Container  *dockercontainer.Config
 	Host       *dockercontainer.HostConfig
 	Networking *dockernetwork.NetworkingConfig
-	IsReady    func(context.Context, *dockertypes.ContainerJSON) error
+	IsReady    func(context.Context, *dockercontainer.InspectResponse) error
 	DependsOn  []string
 }
 
@@ -264,7 +264,7 @@ func (c *Compose) RegisterService(name string, cfg *ServiceConfig) {
 	})
 }
 
-func (c *Compose) GetContainer(ctx context.Context, name string) (*dockertypes.ContainerJSON, error) {
+func (c *Compose) GetContainer(ctx context.Context, name string) (*dockercontainer.InspectResponse, error) {
 	svc, err := c.getService(name)
 	if err != nil {
 		return nil, err
@@ -273,7 +273,7 @@ func (c *Compose) GetContainer(ctx context.Context, name string) (*dockertypes.C
 	return c.getContainer(ctx, svc)
 }
 
-func (c *Compose) getContainer(ctx context.Context, svc *service) (*dockertypes.ContainerJSON, error) {
+func (c *Compose) getContainer(ctx context.Context, svc *service) (*dockercontainer.InspectResponse, error) {
 	if svc.err != nil {
 		return nil, svc.err
 	}
@@ -318,7 +318,7 @@ func (c *Compose) pullImage(ctx context.Context, image string) error {
 		return err
 	}
 
-	options := dockertypes.ImagePullOptions{
+	options := dockerimage.PullOptions{
 		RegistryAuth: "", // TODO: deal with docker registry authentication
 	}
 
@@ -396,7 +396,7 @@ func (c *Compose) removeContainer(ctx context.Context, svc *service) error {
 		err := c.dockerc.ContainerRemove(
 			ctx,
 			svc.id,
-			dockertypes.ContainerRemoveOptions{},
+			dockercontainer.RemoveOptions{},
 		)
 		if err != nil {
 			logger.WithError(err).Errorf("failed to remove container")
@@ -432,7 +432,7 @@ func (c *Compose) startContainer(ctx context.Context, svc *service) error {
 		err := c.dockerc.ContainerStart(
 			ctx,
 			svc.id,
-			dockertypes.ContainerStartOptions{},
+			dockercontainer.StartOptions{},
 		)
 		if err != nil {
 			svc.err = err

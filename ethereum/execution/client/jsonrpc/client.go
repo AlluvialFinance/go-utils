@@ -270,6 +270,11 @@ func (c *Client) SubscribeFilterLogs(context.Context, geth.FilterQuery, chan<- g
 	return nil, fmt.Errorf("not implemented")
 }
 
+// SubscribeTransactionReceipts subscribes to the results of a streaming transaction receipt query.
+func (c *Client) SubscribeTransactionReceipts(_ context.Context, _ *geth.TransactionReceiptsQuery, _ chan<- []*gethtypes.Receipt) (geth.Subscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
 type feeHistoryResultMarshaling struct {
 	OldestBlock  *gethhexutil.Big     `json:"oldestBlock"`
 	Reward       [][]*gethhexutil.Big `json:"reward,omitempty"`

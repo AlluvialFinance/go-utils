@@ -17,7 +17,7 @@ INTEGRATION_COVERAGE_OUT = $(COVERAGE_BUILD_FOLDER)/it_cov.out
 INTEGRATION_COVERAGE_HTML =$(COVERAGE_BUILD_FOLDER)/it_index.html
 
 # Test lint variables
-GOLANGCI_VERSION = v1.62.0
+GOLANGCI_VERSION = v1.64.8
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -41,12 +41,19 @@ unit-test: build/coverage
 unit-test-cov: unit-test
 	@go tool cover -html=$(UNIT_COVERAGE_OUT) -o $(UNIT_COVERAGE_HTML)
 
-fix-lint: ## Run linter to fix issues
-	docker run --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:$(GOLANGCI_VERSION) golangci-lint run --fix
+fix-lint: lint-fix ## Run linter to fix issues
+	
 
 # @misspell -error $(GOFILES)
-test-lint: ## Check linting
-	docker run --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:$(GOLANGCI_VERSION) golangci-lint run -v
+test-lint: lint ## Check linting
+
+lint:
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_VERSION) run
+
+lint-fix:
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_VERSION) run --fix --issues-exit-code=0
+
+.PHONY: lint lint-fix
 
 integration-test: build/coverage
 	@go test -covermode=count -coverprofile $(INTEGRATION_COVERAGE_OUT) -v --tags integration ${PACKAGES}
