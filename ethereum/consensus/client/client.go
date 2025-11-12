@@ -33,7 +33,7 @@ import (
 // - <slot>
 // - <hex encoded block root (with 0x prefix)>.
 //
-//go:generate mockgen -source client.go -destination mock/client.go -package mock client
+//go:generate mockgen -source client.go -destination mock/client.go -package mock Client
 type Client interface {
 	BeaconClient
 	NodeClient
