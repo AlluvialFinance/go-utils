@@ -25,6 +25,7 @@ func prepareComposeDatabase(t *testing.T) *kilnsql.Config {
 
 	opts := new(kilndocker.PostgresServiceOpts).SetDefault()
 	svcCfg, err := kilndocker.NewPostgresServiceConfig(opts)
+	svcCfg.Host.AutoRemove = true
 	require.NoError(t, err)
 
 	svcName := "postgres"
