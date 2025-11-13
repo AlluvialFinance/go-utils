@@ -19,6 +19,8 @@ INTEGRATION_COVERAGE_HTML =$(COVERAGE_BUILD_FOLDER)/it_index.html
 # Test lint variables
 GOLANGCI_VERSION = v1.64.8
 
+MOCKGEN = go run github.com/golang/mock/mockgen@v1.6.0 \
+
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	OPEN = xdg-open
@@ -60,3 +62,8 @@ integration-test: build/coverage
 
 integration-test-cov: integration-test
 	@go tool cover -html=$(INTEGRATION_COVERAGE_OUT) -o $(INTEGRATION_COVERAGE_HTML)
+
+mocks:
+	${MOCKGEN} -source ethereum/execution/client/client.go -destination ethereum/execution/client/mock/client.go -package mock Client
+	${MOCKGEN} -source ethereum/consensus/client/client.go -destination ethereum/consensus/client/mock/client.go -package mock Client
+	${MOCKGEN} -source net/jsonrpc/client.go -destination net/jsonrpc/testutils/client.go -package testutils Client

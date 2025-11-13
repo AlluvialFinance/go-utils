@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	dockerref "github.com/docker/distribution/reference"
@@ -399,8 +400,12 @@ func (c *Compose) removeContainer(ctx context.Context, svc *service) error {
 			dockercontainer.RemoveOptions{},
 		)
 		if err != nil {
-			logger.WithError(err).Errorf("failed to remove container")
-			return err
+			if strings.Contains(err.Error(), "already in progress") {
+				logger.WithError(err).Warnf("container already removed")
+			} else {
+				logger.WithError(err).Errorf("failed to remove container")
+				return err
+			}
 		}
 		logger.Infof("container removed")
 	}
