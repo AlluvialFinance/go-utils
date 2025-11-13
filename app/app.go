@@ -502,7 +502,58 @@ func (app *App) instrumentMiddleware() alice.Chain {
 }
 
 func (app *App) loggerMiddleware(h http.Handler) http.Handler {
+	// Check if logger is using JSON formatter
+	_, isJSON := app.logger.Formatter.(*logrus.JSONFormatter)
+
+	if isJSON {
+		// Use custom JSON logging middleware
+		return app.jsonLoggingHandler(h)
+	}
+
+	// Use Apache Combined Log Format for text/other formatters
 	return handlers.CombinedLoggingHandler(app.logger.Out, h)
+}
+
+func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Wrap the response writer to capture status code
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Call the next handler
+		h.ServeHTTP(wrapped, r)
+
+		// Log the request in JSON format
+		app.logger.WithFields(logrus.Fields{
+			"method":      r.Method,
+			"uri":         r.RequestURI,
+			"remote_addr": r.RemoteAddr,
+			"user_agent":  r.UserAgent(),
+			"status":      wrapped.statusCode,
+			"bytes":       wrapped.bytesWritten,
+			"duration_ms": time.Since(start).Milliseconds(),
+			"protocol":    r.Proto,
+		}).Info("HTTP request")
+	})
+}
+
+// responseWriter wraps http.ResponseWriter to capture status code and bytes written
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode   int
+	bytesWritten int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	n, err := rw.ResponseWriter.Write(b)
+	rw.bytesWritten += n
+	return n, err
 }
 
 func (app *App) requestMetricsMiddleware(h http.Handler) http.Handler {
