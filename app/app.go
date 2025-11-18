@@ -1,12 +1,15 @@
 package app
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -502,7 +505,113 @@ func (app *App) instrumentMiddleware() alice.Chain {
 }
 
 func (app *App) loggerMiddleware(h http.Handler) http.Handler {
+	// Check if logger is using JSON formatter
+	if app.cfg.Logger.Format == "json" {
+		return app.jsonLoggingHandler(h)
+	}
 	return handlers.CombinedLoggingHandler(app.logger.Out, h)
+}
+
+func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Capture memory stats before the request if enabled
+		var memBefore runtime.MemStats
+		if app.cfg.LogMemoryUsage {
+			runtime.ReadMemStats(&memBefore)
+		}
+
+		// Wrap the response writer to capture status code
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Call the next handler
+		h.ServeHTTP(wrapped, r)
+
+		// Build log fields
+		fields := logrus.Fields{
+			"method":      r.Method,
+			"uri":         r.RequestURI,
+			"remote_addr": r.RemoteAddr,
+			"user_agent":  r.UserAgent(),
+			"status":      wrapped.statusCode,
+			"bytes":       wrapped.bytesWritten,
+			"duration_ms": time.Since(start).Milliseconds(),
+			"protocol":    r.Proto,
+		}
+
+		// Capture memory stats after the request and calculate deltas
+		if app.cfg.LogMemoryUsage {
+			var memAfter runtime.MemStats
+			runtime.ReadMemStats(&memAfter)
+
+			// Before stats
+			fields["mem_before_alloc_mb"] = bToMb(memBefore.Alloc)
+			fields["mem_before_heap_alloc_mb"] = bToMb(memBefore.HeapAlloc)
+			fields["mem_before_heap_inuse_mb"] = bToMb(memBefore.HeapInuse)
+
+			// After stats
+			fields["mem_after_alloc_mb"] = bToMb(memAfter.Alloc)
+			fields["mem_after_heap_alloc_mb"] = bToMb(memAfter.HeapAlloc)
+			fields["mem_after_heap_inuse_mb"] = bToMb(memAfter.HeapInuse)
+			fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
+
+			// Delta stats (most important for identifying memory spikes)
+			fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
+			fields["mem_delta_heap_alloc_mb"] = int64(bToMb(memAfter.HeapAlloc)) - int64(bToMb(memBefore.HeapAlloc))
+			fields["mem_delta_heap_inuse_mb"] = int64(bToMb(memAfter.HeapInuse)) - int64(bToMb(memBefore.HeapInuse))
+		}
+
+		// Log the request in JSON format
+		app.logger.WithFields(fields).Info("HTTP request")
+	})
+}
+
+// bToMb converts bytes to megabytes
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
+}
+
+// responseWriter wraps http.ResponseWriter to capture status code and bytes written
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode   int
+	bytesWritten int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	n, err := rw.ResponseWriter.Write(b)
+	rw.bytesWritten += n
+	return n, err
+}
+
+// Flush implements http.Flusher to support streaming responses
+func (rw *responseWriter) Flush() {
+	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// Hijack implements http.Hijacker to support WebSockets and raw TCP connections
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h, ok := rw.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("underlying ResponseWriter does not support hijacking")
+	}
+	return h.Hijack()
+}
+
+// Push implements http.Pusher to support HTTP/2 server push
+func (rw *responseWriter) Push(target string, opts *http.PushOptions) error {
+	if p, ok := rw.ResponseWriter.(http.Pusher); ok {
+		return p.Push(target, opts)
+	}
+	return http.ErrNotSupported
 }
 
 func (app *App) requestMetricsMiddleware(h http.Handler) http.Handler {
