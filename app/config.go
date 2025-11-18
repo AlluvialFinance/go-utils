@@ -10,11 +10,12 @@ import (
 )
 
 type Config struct {
-	Logger       *kilnlog.Config
-	Server       *kilnhttp.ServerConfig
-	Healthz      *kilnhttp.ServerConfig
-	StartTimeout *types.Duration
-	StopTimeout  *types.Duration
+	Logger         *kilnlog.Config
+	Server         *kilnhttp.ServerConfig
+	Healthz        *kilnhttp.ServerConfig
+	StartTimeout   *types.Duration
+	StopTimeout    *types.Duration
+	LogMemoryUsage bool // Enable memory usage logging in HTTP middleware (for debugging)
 }
 
 func (cfg *Config) SetDefault() *Config {

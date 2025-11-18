@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -505,14 +506,9 @@ func (app *App) instrumentMiddleware() alice.Chain {
 
 func (app *App) loggerMiddleware(h http.Handler) http.Handler {
 	// Check if logger is using JSON formatter
-	_, isJSON := app.logger.Formatter.(*logrus.JSONFormatter)
-
-	if isJSON {
-		// Use custom JSON logging middleware
+	if app.cfg.Logger.Format == "json" {
 		return app.jsonLoggingHandler(h)
 	}
-
-	// Use Apache Combined Log Format for text/other formatters
 	return handlers.CombinedLoggingHandler(app.logger.Out, h)
 }
 
@@ -526,8 +522,8 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 		// Call the next handler
 		h.ServeHTTP(wrapped, r)
 
-		// Log the request in JSON format
-		app.logger.WithFields(logrus.Fields{
+		// Build log fields
+		fields := logrus.Fields{
 			"method":      r.Method,
 			"uri":         r.RequestURI,
 			"remote_addr": r.RemoteAddr,
@@ -536,8 +532,28 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			"bytes":       wrapped.bytesWritten,
 			"duration_ms": time.Since(start).Milliseconds(),
 			"protocol":    r.Proto,
-		}).Info("HTTP request")
+		}
+
+		// Optionally add memory usage statistics
+		if app.cfg.LogMemoryUsage {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			fields["mem_alloc_mb"] = bToMb(m.Alloc)
+			fields["mem_total_alloc_mb"] = bToMb(m.TotalAlloc)
+			fields["mem_sys_mb"] = bToMb(m.Sys)
+			fields["mem_num_gc"] = m.NumGC
+			fields["mem_heap_alloc_mb"] = bToMb(m.HeapAlloc)
+			fields["mem_heap_inuse_mb"] = bToMb(m.HeapInuse)
+		}
+
+		// Log the request in JSON format
+		app.logger.WithFields(fields).Info("HTTP request")
 	})
+}
+
+// bToMb converts bytes to megabytes
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
 }
 
 // responseWriter wraps http.ResponseWriter to capture status code and bytes written
