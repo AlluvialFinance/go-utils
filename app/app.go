@@ -516,6 +516,12 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
+		// Capture memory stats before the request if enabled
+		var memBefore runtime.MemStats
+		if app.cfg.LogMemoryUsage {
+			runtime.ReadMemStats(&memBefore)
+		}
+
 		// Wrap the response writer to capture status code
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
@@ -534,16 +540,26 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			"protocol":    r.Proto,
 		}
 
-		// Optionally add memory usage statistics
+		// Capture memory stats after the request and calculate deltas
 		if app.cfg.LogMemoryUsage {
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-			fields["mem_alloc_mb"] = bToMb(m.Alloc)
-			fields["mem_total_alloc_mb"] = bToMb(m.TotalAlloc)
-			fields["mem_sys_mb"] = bToMb(m.Sys)
-			fields["mem_num_gc"] = m.NumGC
-			fields["mem_heap_alloc_mb"] = bToMb(m.HeapAlloc)
-			fields["mem_heap_inuse_mb"] = bToMb(m.HeapInuse)
+			var memAfter runtime.MemStats
+			runtime.ReadMemStats(&memAfter)
+
+			// Before stats
+			fields["mem_before_alloc_mb"] = bToMb(memBefore.Alloc)
+			fields["mem_before_heap_alloc_mb"] = bToMb(memBefore.HeapAlloc)
+			fields["mem_before_heap_inuse_mb"] = bToMb(memBefore.HeapInuse)
+
+			// After stats
+			fields["mem_after_alloc_mb"] = bToMb(memAfter.Alloc)
+			fields["mem_after_heap_alloc_mb"] = bToMb(memAfter.HeapAlloc)
+			fields["mem_after_heap_inuse_mb"] = bToMb(memAfter.HeapInuse)
+			fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
+
+			// Delta stats (most important for identifying memory spikes)
+			fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
+			fields["mem_delta_heap_alloc_mb"] = int64(bToMb(memAfter.HeapAlloc)) - int64(bToMb(memBefore.HeapAlloc))
+			fields["mem_delta_heap_inuse_mb"] = int64(bToMb(memAfter.HeapInuse)) - int64(bToMb(memBefore.HeapInuse))
 		}
 
 		// Log the request in JSON format
