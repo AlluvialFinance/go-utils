@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // traceIDKey is an unexported type for context keys to prevent collisions.
@@ -40,6 +41,19 @@ func GetTraceID(ctx context.Context) string {
 // Returns an empty string if no trace ID is present.
 func GetTraceIDFromRequest(r *http.Request) string {
 	return GetTraceID(r.Context())
+}
+
+// LoggerWithTrace returns a logger with the trace ID field added.
+// If no trace ID is present in the context, returns the original logger.
+// If logger is nil, returns nil.
+func LoggerWithTrace(ctx context.Context, logger logrus.FieldLogger) logrus.FieldLogger {
+	if logger == nil {
+		return nil
+	}
+	if traceID := GetTraceID(ctx); traceID != "" {
+		return logger.WithField(FieldTraceID, traceID)
+	}
+	return logger
 }
 
 // Middleware returns an HTTP middleware that generates a trace ID for each request.
