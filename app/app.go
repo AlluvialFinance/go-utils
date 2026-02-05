@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -15,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/hellofresh/health-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
@@ -517,55 +515,94 @@ func (app *App) loggerMiddleware(h http.Handler) http.Handler {
 
 // combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
 // with an additional trace_id field appended.
+// combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
+// with trace_id and optional memory stats appended.
 func (app *App) combinedLoggingHandlerWithTraceID(h http.Handler) http.Handler {
-	return handlers.CustomLoggingHandler(app.logger.Out, h, app.writeApacheCombinedLogWithTraceID)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Capture memory stats before the request if enabled
+		var memBefore runtime.MemStats
+		if app.cfg.LogMemoryUsage {
+			runtime.ReadMemStats(&memBefore)
+		}
+
+		// Wrap the response writer to capture status code and bytes written
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Call the next handler
+		h.ServeHTTP(wrapped, r)
+
+		// Write the log entry
+		app.writeApacheCombinedLog(wrapped, r, start, &memBefore)
+	})
 }
 
-// writeApacheCombinedLogWithTraceID writes a log entry in Apache Combined Log Format with trace ID appended.
-// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s
-func (app *App) writeApacheCombinedLogWithTraceID(writer io.Writer, params handlers.LogFormatterParams) {
-	traceID := tracing.GetTraceIDFromRequest(params.Request)
+// writeApacheCombinedLog writes a log entry in Apache Combined Log Format with trace ID and optional memory stats.
+// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s [mem_stats...]
+func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request, start time.Time, memBefore *runtime.MemStats) {
+	traceID := tracing.GetTraceIDFromRequest(r)
 
 	// Get username from request (basic auth)
 	username := "-"
-	if params.Request.URL.User != nil {
-		if name := params.Request.URL.User.Username(); name != "" {
+	if r.URL.User != nil {
+		if name := r.URL.User.Username(); name != "" {
 			username = name
 		}
 	}
 
 	// Get referer and user agent, defaulting to "-" if empty
-	referer := params.Request.Referer()
+	referer := r.Referer()
 	if referer == "" {
 		referer = "-"
 	}
-	userAgent := params.Request.UserAgent()
+	userAgent := r.UserAgent()
 	if userAgent == "" {
 		userAgent = "-"
 	}
 
 	// Get request host (client IP)
-	host := params.Request.RemoteAddr
+	host := r.RemoteAddr
 
 	// Get request URI
-	uri := params.Request.RequestURI
+	uri := r.RequestURI
 	if uri == "" {
-		uri = params.URL.RequestURI()
+		uri = r.URL.RequestURI()
 	}
 
-	// Format: host - username [timestamp] "method uri protocol" status size "referer" "user-agent" trace_id=xxx
-	fmt.Fprintf(writer, "%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" trace_id=%s\n",
+	// Calculate duration
+	durationMs := time.Since(start).Milliseconds()
+
+	// Build memory stats suffix if enabled
+	memStats := ""
+	if app.cfg.LogMemoryUsage {
+		var memAfter runtime.MemStats
+		runtime.ReadMemStats(&memAfter)
+
+		memStats = fmt.Sprintf(" mem_before_alloc_mb=%d mem_after_alloc_mb=%d mem_delta_alloc_mb=%d mem_after_heap_inuse_mb=%d mem_after_sys_mb=%d",
+			bToMb(memBefore.Alloc),
+			bToMb(memAfter.Alloc),
+			int64(bToMb(memAfter.Alloc))-int64(bToMb(memBefore.Alloc)),
+			bToMb(memAfter.HeapInuse),
+			bToMb(memAfter.Sys),
+		)
+	}
+
+	// Format: host - username [timestamp] "method uri protocol" status size "referer" "user-agent" trace_id=xxx duration_ms=xxx [mem_stats]
+	fmt.Fprintf(app.logger.Out, "%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" trace_id=%s duration_ms=%d%s\n",
 		host,
 		username,
-		params.TimeStamp.Format("02/Jan/2006:15:04:05 -0700"),
-		params.Request.Method,
+		start.Format("02/Jan/2006:15:04:05 -0700"),
+		r.Method,
 		uri,
-		params.Request.Proto,
-		params.StatusCode,
-		params.Size,
+		r.Proto,
+		wrapped.statusCode,
+		wrapped.bytesWritten,
 		referer,
 		userAgent,
 		traceID,
+		durationMs,
+		memStats,
 	)
 }
 
