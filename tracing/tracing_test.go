@@ -13,7 +13,7 @@ import (
 func TestNewTraceID(t *testing.T) {
 	traceID := NewTraceID()
 	assert.NotEmpty(t, traceID)
-	assert.Len(t, traceID, 36) // UUID format: 8-4-4-4-12
+	assert.Len(t, traceID, 26) // ULID format: 26 characters
 
 	// Generate another one to ensure uniqueness
 	traceID2 := NewTraceID()
@@ -65,7 +65,7 @@ func TestMiddleware_generates_new_traceID(t *testing.T) {
 
 	// Check trace ID was generated and stored in context
 	assert.NotEmpty(t, capturedTraceID)
-	assert.Len(t, capturedTraceID, 36) // UUID format
+	assert.Len(t, capturedTraceID, 26) // ULID format
 
 	// Check response header was set
 	assert.Equal(t, capturedTraceID, rr.Header().Get(HeaderTraceID))

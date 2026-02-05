@@ -19,7 +19,7 @@ func (c *Client) getVoluntaryExits(ctx context.Context) (beaconphase0.VoluntaryE
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetVoluntaryExits", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetVoluntaryExits", resp, "Failure sending request")
 	}

@@ -19,7 +19,7 @@ func (c *Client) getStateFork(ctx context.Context, stateID string) (*beaconcommo
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateFork", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateFork", resp, "Failure sending request")
 	}

@@ -21,7 +21,7 @@ func (c *Client) getValidatorBalances(ctx context.Context, stateID string, valid
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetValidatorBalances", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetValidatorBalances", resp, "Failure sending request")
 	}

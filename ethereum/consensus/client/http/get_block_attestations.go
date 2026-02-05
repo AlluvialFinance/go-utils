@@ -19,7 +19,7 @@ func (c *Client) getBlockAttestations(ctx context.Context, blockID string) (beac
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockAttestations", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockAttestations", resp, "Failure sending request")
 	}

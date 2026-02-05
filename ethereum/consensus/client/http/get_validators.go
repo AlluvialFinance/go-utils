@@ -22,7 +22,7 @@ func (c *Client) getValidators(ctx context.Context, stateID string, validatorIDs
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetValidators", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetValidators", resp, "Failure sending request")
 	}

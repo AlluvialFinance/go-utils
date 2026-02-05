@@ -10,6 +10,7 @@ import (
 
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
+	"github.com/kilnfi/go-utils/tracing"
 )
 
 var silentLog = &logrus.Logger{
@@ -60,6 +61,22 @@ func (c *Client) Logger() logrus.FieldLogger {
 
 func (c *Client) SetLogger(logger logrus.FieldLogger) {
 	c.logger = logger.WithField("component", "eth.consensus.client")
+}
+
+// do performs an HTTP request and logs the trace ID from the response if present.
+func (c *Client) do(req *http.Request) (*http.Response, error) {
+	resp, err := c.client.Do(req)
+	if resp != nil {
+		c.logResponseTraceID(resp)
+	}
+	return resp, err
+}
+
+// logResponseTraceID logs the trace ID from the response header if present.
+func (c *Client) logResponseTraceID(resp *http.Response) {
+	if traceID := resp.Header.Get(tracing.HeaderTraceID); traceID != "" {
+		c.logger.WithField(tracing.FieldTraceID, traceID).Debug("received response from CL node")
+	}
 }
 
 func newRequest(ctx context.Context) *http.Request {

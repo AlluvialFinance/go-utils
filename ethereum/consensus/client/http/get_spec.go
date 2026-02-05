@@ -20,7 +20,7 @@ func (c *Client) getSpec(ctx context.Context) (*beaconcommon.Spec, error) {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSpec", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSpec", resp, "Failure sending request")
 	}

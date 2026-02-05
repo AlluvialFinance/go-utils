@@ -19,7 +19,7 @@ func (c *Client) getAttestations(ctx context.Context) (beaconphase0.Attestations
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetAttestations", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetAttestations", resp, "Failure sending request")
 	}

@@ -22,7 +22,7 @@ func (c *Client) getBlockHeaders(ctx context.Context, slot *beaconcommon.Slot, p
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockHeaders", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockHeaders", resp, "Failure sending request")
 	}

@@ -22,7 +22,7 @@ func (c *Client) getCommittees(ctx context.Context, stateID string, epoch *beaco
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetCommittees", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetCommittees", resp, "Failure sending request")
 	}
