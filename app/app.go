@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ import (
 	"github.com/justinas/alice"
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/tracing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -499,6 +501,7 @@ func (app *App) setHandler() {
 
 func (app *App) instrumentMiddleware() alice.Chain {
 	return alice.New(
+		tracing.Middleware,
 		app.loggerMiddleware,
 		app.requestMetricsMiddleware,
 	)
@@ -509,7 +512,61 @@ func (app *App) loggerMiddleware(h http.Handler) http.Handler {
 	if app.cfg.Logger.Format == "json" {
 		return app.jsonLoggingHandler(h)
 	}
-	return handlers.CombinedLoggingHandler(app.logger.Out, h)
+	return app.combinedLoggingHandlerWithTraceID(h)
+}
+
+// combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
+// with an additional trace_id field appended.
+func (app *App) combinedLoggingHandlerWithTraceID(h http.Handler) http.Handler {
+	return handlers.CustomLoggingHandler(app.logger.Out, h, app.writeApacheCombinedLogWithTraceID)
+}
+
+// writeApacheCombinedLogWithTraceID writes a log entry in Apache Combined Log Format with trace ID appended.
+// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s
+func (app *App) writeApacheCombinedLogWithTraceID(writer io.Writer, params handlers.LogFormatterParams) {
+	traceID := tracing.GetTraceIDFromRequest(params.Request)
+
+	// Get username from request (basic auth)
+	username := "-"
+	if params.Request.URL.User != nil {
+		if name := params.Request.URL.User.Username(); name != "" {
+			username = name
+		}
+	}
+
+	// Get referer and user agent, defaulting to "-" if empty
+	referer := params.Request.Referer()
+	if referer == "" {
+		referer = "-"
+	}
+	userAgent := params.Request.UserAgent()
+	if userAgent == "" {
+		userAgent = "-"
+	}
+
+	// Get request host (client IP)
+	host := params.Request.RemoteAddr
+
+	// Get request URI
+	uri := params.Request.RequestURI
+	if uri == "" {
+		uri = params.URL.RequestURI()
+	}
+
+	// Format: host - username [timestamp] "method uri protocol" status size "referer" "user-agent" trace_id=xxx
+	fmt.Fprintf(writer, "%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" trace_id=%s\n",
+		host,
+		username,
+		params.TimeStamp.Format("02/Jan/2006:15:04:05 -0700"),
+		params.Request.Method,
+		uri,
+		params.Request.Proto,
+		params.StatusCode,
+		params.Size,
+		referer,
+		userAgent,
+		traceID,
+	)
 }
 
 func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
@@ -538,6 +595,11 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			"bytes":       wrapped.bytesWritten,
 			"duration_ms": time.Since(start).Milliseconds(),
 			"protocol":    r.Proto,
+		}
+
+		// Add trace ID if present in context
+		if traceID := tracing.GetTraceIDFromRequest(r); traceID != "" {
+			fields[tracing.FieldTraceID] = traceID
 		}
 
 		// Capture memory stats after the request and calculate deltas
