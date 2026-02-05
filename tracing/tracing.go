@@ -3,9 +3,12 @@ package tracing
 
 import (
 	"context"
+	"math/rand"
 	"net/http"
+	"time"
 
-	"github.com/google/uuid"
+	"github.com/oklog/ulid"
+	"github.com/oklog/ulid/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,7 +23,8 @@ const FieldTraceID = "trace_id"
 
 // NewTraceID generates a new UUID-based trace ID.
 func NewTraceID() string {
-	return uuid.New().String()
+	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return ulid.MustNew(ulid.Timestamp(time.Now()), entropy).String()
 }
 
 // WithTraceID stores a trace ID in the context.

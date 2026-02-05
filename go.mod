@@ -11,7 +11,6 @@ require (
 	github.com/ethereum/go-ethereum v1.16.8
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/handlers v1.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/hellofresh/health-go/v4 v4.7.0
@@ -38,6 +37,11 @@ require (
 	gopkg.in/h2non/gock.v1 v1.1.2
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
+)
+
+require (
+	github.com/oklog/ulid v1.3.1
+	github.com/oklog/ulid/v2 v2.1.1
 )
 
 require (
