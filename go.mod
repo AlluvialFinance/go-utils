@@ -39,10 +39,7 @@ require (
 	gorm.io/gorm v1.31.1
 )
 
-require (
-	github.com/oklog/ulid v1.3.1
-	github.com/oklog/ulid/v2 v2.1.1
-)
+require github.com/oklog/ulid/v2 v2.1.1
 
 require (
 	dario.cat/mergo v1.0.2 // indirect

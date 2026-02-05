@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/oklog/ulid"
 	"github.com/oklog/ulid/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -21,7 +20,7 @@ const HeaderTraceID = "X-Trace-ID"
 // FieldTraceID is the log field name for trace IDs.
 const FieldTraceID = "trace_id"
 
-// NewTraceID generates a new UUID-based trace ID.
+// NewTraceID generates a new ULID-based trace ID.
 func NewTraceID() string {
 	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return ulid.MustNew(ulid.Timestamp(time.Now()), entropy).String()
