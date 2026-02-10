@@ -63,6 +63,11 @@ func (c *Client) SetLogger(logger logrus.FieldLogger) {
 	}
 }
 
+// PrepareContextForOutbound returns ctx unchanged; trace header injection is only supported by the geth client.
+func (c *Client) PrepareContextForOutbound(ctx context.Context) context.Context {
+	return ctx
+}
+
 func (c *Client) call(ctx context.Context, res interface{}, method string, params ...interface{}) error {
 	return c.client.Call(
 		ctx,

@@ -63,24 +63,16 @@ func (c *Client) SetLogger(logger logrus.FieldLogger) {
 	c.logger = logger.WithField("component", "eth.consensus.client")
 }
 
-// do performs an HTTP request and logs the trace ID from the response if present.
+// do performs an HTTP request.
 func (c *Client) do(req *http.Request) (*http.Response, error) {
-	resp, err := c.client.Do(req)
-	if resp != nil {
-		c.logResponseTraceID(resp)
-	}
-	return resp, err
-}
-
-// logResponseTraceID logs the trace ID from the response header if present.
-func (c *Client) logResponseTraceID(resp *http.Response) {
-	if traceID := resp.Header.Get(tracing.HeaderTraceID); traceID != "" {
-		c.logger.WithField(tracing.FieldTraceID, traceID).Debug("received response from CL node")
-	}
+	return c.client.Do(req)
 }
 
 func newRequest(ctx context.Context) *http.Request {
 	req, _ := http.NewRequestWithContext(ctx, "", "", http.NoBody)
+	if traceID := tracing.GetTraceID(ctx); traceID != "" {
+		req.Header.Set(tracing.HeaderTraceID, traceID)
+	}
 	return req
 }
 

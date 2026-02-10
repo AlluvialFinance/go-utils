@@ -118,6 +118,38 @@ func TestMiddleware_chains_correctly(t *testing.T) {
 func TestConstants(t *testing.T) {
 	assert.Equal(t, "X-Trace-ID", HeaderTraceID)
 	assert.Equal(t, "trace_id", FieldTraceID)
+	assert.Equal(t, "parent_trace_id", FieldParentTraceID)
+}
+
+func TestWithParentTraceID_and_GetParentTraceID(t *testing.T) {
+	ctx := context.Background()
+	assert.Empty(t, GetParentTraceID(ctx))
+
+	ctx = WithParentTraceID(ctx, "parent-123")
+	assert.Equal(t, "parent-123", GetParentTraceID(ctx))
+}
+
+func TestStartSpan_no_existing_trace_id(t *testing.T) {
+	ctx := context.Background()
+	ctx = StartSpan(ctx)
+
+	assert.NotEmpty(t, GetTraceID(ctx))
+	assert.Len(t, GetTraceID(ctx), 26)
+	assert.Empty(t, GetParentTraceID(ctx))
+}
+
+func TestStartSpan_with_existing_trace_id(t *testing.T) {
+	upstream := "upstream-trace-abc"
+	ctx := WithTraceID(context.Background(), upstream)
+	ctx = StartSpan(ctx)
+
+	current := GetTraceID(ctx)
+	parent := GetParentTraceID(ctx)
+
+	assert.NotEmpty(t, current)
+	assert.Len(t, current, 26)
+	assert.NotEqual(t, upstream, current, "new trace ID should differ from upstream")
+	assert.Equal(t, upstream, parent, "upstream should be stored as parent")
 }
 
 func TestMiddleware_response_writer_passthrough(t *testing.T) {

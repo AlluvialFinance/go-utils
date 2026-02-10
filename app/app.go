@@ -538,10 +538,11 @@ func (app *App) combinedLoggingHandlerWithTraceID(h http.Handler) http.Handler {
 	})
 }
 
-// writeApacheCombinedLog writes a log entry in Apache Combined Log Format with trace ID and optional memory stats.
-// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s [mem_stats...]
+// writeApacheCombinedLog writes a log entry in Apache Combined Log Format with trace ID, optional parent_trace_id, and optional memory stats.
+// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s [parent_trace_id=%s] [mem_stats...]
 func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request, start time.Time, memBefore *runtime.MemStats) {
 	traceID := tracing.GetTraceIDFromRequest(r)
+	parentTraceID := tracing.GetParentTraceIDFromRequest(r)
 
 	// Get username from request (basic auth)
 	username := "-"
@@ -588,22 +589,16 @@ func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request,
 		)
 	}
 
-	// Format: host - username [timestamp] "method uri protocol" status size "referer" "user-agent" trace_id=xxx duration_ms=xxx [mem_stats]
-	fmt.Fprintf(app.logger.Out, "%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" trace_id=%s duration_ms=%d%s\n",
-		host,
-		username,
-		start.Format("02/Jan/2006:15:04:05 -0700"),
-		r.Method,
-		uri,
-		r.Proto,
-		wrapped.statusCode,
-		wrapped.bytesWritten,
-		referer,
-		userAgent,
-		traceID,
-		durationMs,
-		memStats,
-	)
+	// Format: host - username [timestamp] "method uri protocol" status size "referer" "user-agent" trace_id=xxx [parent_trace_id=xxx] duration_ms=xxx [mem_stats]
+	logLine := fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" trace_id=%s",
+		host, username, start.Format("02/Jan/2006:15:04:05 -0700"),
+		r.Method, uri, r.Proto,
+		wrapped.statusCode, wrapped.bytesWritten,
+		referer, userAgent, traceID)
+	if parentTraceID != "" {
+		logLine += " parent_trace_id=" + parentTraceID
+	}
+	fmt.Fprintf(app.logger.Out, "%s duration_ms=%d%s\n", logLine, durationMs, memStats)
 }
 
 func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
@@ -634,9 +629,12 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			"protocol":    r.Proto,
 		}
 
-		// Add trace ID if present in context
+		// Add trace ID and parent trace ID if present in context
 		if traceID := tracing.GetTraceIDFromRequest(r); traceID != "" {
 			fields[tracing.FieldTraceID] = traceID
+		}
+		if parentTraceID := tracing.GetParentTraceIDFromRequest(r); parentTraceID != "" {
+			fields[tracing.FieldParentTraceID] = parentTraceID
 		}
 
 		// Capture memory stats after the request and calculate deltas
