@@ -23,6 +23,9 @@ type traceIDKey struct{}
 // parentTraceIDKey is the context key for a parent/upstream trace ID.
 type parentTraceIDKey struct{}
 
+// outboundHeadersKey is the context key for headers to send on outbound HTTP requests.
+type outboundHeadersKey struct{}
+
 // HeaderTraceID is the HTTP header name for trace IDs.
 const HeaderTraceID = "X-Trace-ID"
 
@@ -63,6 +66,28 @@ func GetParentTraceID(ctx context.Context) string {
 		return id
 	}
 	return ""
+}
+
+// WithOutboundHeaders stores headers to send on outbound HTTP requests (e.g. X-Trace-ID).
+// Used by clients in PrepareContextForOutbound so the transport can attach them to the request.
+// The header map is cloned; later changes to the passed header do not affect the context.
+func WithOutboundHeaders(ctx context.Context, h http.Header) context.Context {
+	if len(h) == 0 {
+		return ctx
+	}
+	clone := make(http.Header, len(h))
+	for k, v := range h {
+		clone[k] = append([]string(nil), v...)
+	}
+	return context.WithValue(ctx, outboundHeadersKey{}, clone)
+}
+
+// GetOutboundHeaders returns headers stored for outbound requests, or nil if none.
+func GetOutboundHeaders(ctx context.Context) http.Header {
+	if h, ok := ctx.Value(outboundHeadersKey{}).(http.Header); ok {
+		return h
+	}
+	return nil
 }
 
 // StartSpan starts a new trace span: assigns a new trace ID for this operation and, if the context

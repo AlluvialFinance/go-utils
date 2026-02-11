@@ -12,6 +12,7 @@ import (
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
+	"github.com/kilnfi/go-utils/tracing"
 )
 
 // Client allows to connect to a JSON-RPC server
@@ -103,6 +104,16 @@ func newCallRequest(ctx context.Context, req *jsonrpc.Request) (*http.Request, e
 
 func newRequest(ctx context.Context) *http.Request {
 	req, _ := http.NewRequestWithContext(ctx, "", "", http.NoBody)
+	if h := tracing.GetOutboundHeaders(ctx); h != nil {
+		for k, v := range h {
+			req.Header[k] = append([]string(nil), v...)
+		}
+	}
+	if req.Header.Get(tracing.HeaderTraceID) == "" {
+		if traceID := tracing.GetTraceID(ctx); traceID != "" {
+			req.Header.Set(tracing.HeaderTraceID, traceID)
+		}
+	}
 	return req
 }
 
