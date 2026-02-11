@@ -3,7 +3,7 @@ package tracing
 
 import (
 	"context"
-	"math/rand"
+	"crypto/rand"
 	"net/http"
 	"regexp"
 	"time"
@@ -35,10 +35,9 @@ const FieldTraceID = "trace_id"
 // FieldParentTraceID is the log field name for a parent/upstream trace ID.
 const FieldParentTraceID = "parent_trace_id"
 
-// NewTraceID generates a new ULID-based trace ID.
+// NewTraceID generates a new ULID-based trace ID using cryptographically secure entropy.
 func NewTraceID() string {
-	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return ulid.MustNew(ulid.Timestamp(time.Now()), entropy).String()
+	return ulid.MustNew(ulid.Timestamp(time.Now()), rand.Reader).String()
 }
 
 // WithTraceID stores a trace ID in the context.
