@@ -574,31 +574,33 @@ func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request,
 	// Calculate duration
 	durationMs := time.Since(start).Milliseconds()
 
-	// Build memory stats suffix if enabled
-	memStats := ""
+	fields := logrus.Fields{
+		"host":         host,
+		"username":     username,
+		"start_time":   start.Format("02/Jan/2006:15:04:05 -0700"),
+		"method":       r.Method,
+		"uri":          uri,
+		"proto":        r.Proto,
+		"status_code":  wrapped.statusCode,
+		"bytes_written": wrapped.bytesWritten,
+		"referer":      referer,
+		"user_agent":   userAgent,
+		"trace_id":     traceID,
+		"duration_ms":  durationMs,
+	}
+	if parentTraceID != "" {
+		fields["parent_trace_id"] = parentTraceID
+	}
 	if app.cfg.LogMemoryUsage {
 		var memAfter runtime.MemStats
 		runtime.ReadMemStats(&memAfter)
-
-		memStats = fmt.Sprintf(" mem_before_alloc_mb=%d mem_after_alloc_mb=%d mem_delta_alloc_mb=%d mem_after_heap_inuse_mb=%d mem_after_sys_mb=%d",
-			bToMb(memBefore.Alloc),
-			bToMb(memAfter.Alloc),
-			int64(bToMb(memAfter.Alloc))-int64(bToMb(memBefore.Alloc)),
-			bToMb(memAfter.HeapInuse),
-			bToMb(memAfter.Sys),
-		)
+		fields["mem_before_alloc_mb"] = bToMb(memBefore.Alloc)
+		fields["mem_after_alloc_mb"] = bToMb(memAfter.Alloc)
+		fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
+		fields["mem_after_heap_inuse_mb"] = bToMb(memAfter.HeapInuse)
+		fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
 	}
-
-	// Format: host - username [timestamp] "method uri protocol" status size "referer" "user-agent" trace_id=xxx [parent_trace_id=xxx] duration_ms=xxx [mem_stats]
-	logLine := fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" trace_id=%s",
-		host, username, start.Format("02/Jan/2006:15:04:05 -0700"),
-		r.Method, uri, r.Proto,
-		wrapped.statusCode, wrapped.bytesWritten,
-		referer, userAgent, traceID)
-	if parentTraceID != "" {
-		logLine += " parent_trace_id=" + parentTraceID
-	}
-	fmt.Fprintf(app.logger.Out, "%s duration_ms=%d%s\n", logLine, durationMs, memStats)
+	app.logger.WithFields(fields).Info()
 }
 
 func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {

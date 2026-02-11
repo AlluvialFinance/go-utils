@@ -43,7 +43,7 @@ func TestGetTraceIDFromRequest(t *testing.T) {
 	traceID := "request-trace-id-456"
 
 	// Create request with trace ID in context
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	ctx := WithTraceID(req.Context(), traceID)
 	req = req.WithContext(ctx)
 
@@ -91,6 +91,27 @@ func TestMiddleware_uses_existing_traceID_from_header(t *testing.T) {
 
 	// Check response header was set to the same value
 	assert.Equal(t, existingTraceID, rr.Header().Get(HeaderTraceID))
+}
+
+func TestMiddleware_rejects_invalid_traceID_from_header(t *testing.T) {
+	invalidTraceID := "bad\x00trace\r\n"
+	handler := Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		traceID := GetTraceIDFromRequest(r)
+		assert.NotEqual(t, invalidTraceID, traceID, "should not use invalid header value")
+		assert.Len(t, traceID, 26, "should fall back to new ULID")
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+	req.Header.Set(HeaderTraceID, invalidTraceID)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	// Response header should be the generated trace ID, not the invalid one
+	respTraceID := rr.Header().Get(HeaderTraceID)
+	assert.NotEqual(t, invalidTraceID, respTraceID)
+	assert.Len(t, respTraceID, 26)
 }
 
 func TestMiddleware_chains_correctly(t *testing.T) {
@@ -153,14 +174,14 @@ func TestStartSpan_with_existing_trace_id(t *testing.T) {
 }
 
 func TestMiddleware_response_writer_passthrough(t *testing.T) {
-	handler := Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := Middleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_, err := w.Write([]byte(`{"status":"ok"}`))
 		require.NoError(t, err)
 	}))
 
-	req := httptest.NewRequest(http.MethodPost, "/test", nil)
+	req := httptest.NewRequest(http.MethodPost, "/test", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)

@@ -5,11 +5,17 @@ import (
 	"context"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/oklog/ulid/v2"
 	"github.com/sirupsen/logrus"
 )
+
+// traceIDPattern allows alphanumeric, hyphen, underscore, and dot. Used to validate inbound X-Trace-ID.
+var traceIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_\-.]*$`)
+
+const maxTraceIDLen = 128
 
 // traceIDKey is an unexported type for context keys to prevent collisions.
 type traceIDKey struct{}
@@ -99,14 +105,31 @@ func LoggerWithTrace(ctx context.Context, logger logrus.FieldLogger) logrus.Fiel
 	return entry
 }
 
+// validateTraceID returns the given string if it is a valid trace ID (non-empty, max 128 chars,
+// only alphanumeric/hyphen/underscore/dot, no CR/LF or other control characters). Otherwise returns "".
+func validateTraceID(s string) string {
+	if s == "" || len(s) > maxTraceIDLen {
+		return ""
+	}
+	for _, c := range s {
+		if c < 0x20 || c == 0x7f {
+			return ""
+		}
+	}
+	if !traceIDPattern.MatchString(s) {
+		return ""
+	}
+	return s
+}
+
 // Middleware returns an HTTP middleware that generates a trace ID for each request.
-// It checks for an existing X-Trace-ID header first; if present, it uses that value.
-// Otherwise, it generates a new trace ID.
+// It checks for an existing X-Trace-ID header first; if present and valid, it uses that value.
+// Otherwise, it generates a new trace ID. Inbound trace IDs are validated and sanitized to prevent
+// log/response header injection (allowed: alphanumeric, hyphen, underscore, dot; max 128 chars; no control chars).
 // The trace ID is stored in the request context and set as a response header.
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if trace ID already exists in request header (for distributed tracing)
-		traceID := r.Header.Get(HeaderTraceID)
+		traceID := validateTraceID(r.Header.Get(HeaderTraceID))
 		if traceID == "" {
 			traceID = NewTraceID()
 		}
@@ -114,7 +137,7 @@ func Middleware(next http.Handler) http.Handler {
 		// Add trace ID to context
 		ctx := WithTraceID(r.Context(), traceID)
 
-		// Set response header for client correlation
+		// Set response header for client correlation (validated value only)
 		w.Header().Set(HeaderTraceID, traceID)
 
 		// Call next handler with traced context
