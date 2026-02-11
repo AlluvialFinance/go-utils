@@ -58,7 +58,7 @@ func TestMiddleware_generates_new_traceID(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -80,7 +80,7 @@ func TestMiddleware_uses_existing_traceID_from_header(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.Header.Set(HeaderTraceID, existingTraceID)
 	rr := httptest.NewRecorder()
 
@@ -126,7 +126,7 @@ func TestMiddleware_chains_correctly(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)

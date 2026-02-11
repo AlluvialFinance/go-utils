@@ -575,18 +575,18 @@ func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request,
 	durationMs := time.Since(start).Milliseconds()
 
 	fields := logrus.Fields{
-		"host":         host,
-		"username":     username,
-		"start_time":   start.Format("02/Jan/2006:15:04:05 -0700"),
-		"method":       r.Method,
-		"uri":          uri,
-		"proto":        r.Proto,
-		"status_code":  wrapped.statusCode,
+		"host":          host,
+		"username":      username,
+		"start_time":    start.Format("02/Jan/2006:15:04:05 -0700"),
+		"method":        r.Method,
+		"uri":           uri,
+		"proto":         r.Proto,
+		"status_code":   wrapped.statusCode,
 		"bytes_written": wrapped.bytesWritten,
-		"referer":      referer,
-		"user_agent":   userAgent,
-		"trace_id":     traceID,
-		"duration_ms":  durationMs,
+		"referer":       referer,
+		"user_agent":    userAgent,
+		"trace_id":      traceID,
+		"duration_ms":   durationMs,
 	}
 	if parentTraceID != "" {
 		fields["parent_trace_id"] = parentTraceID
