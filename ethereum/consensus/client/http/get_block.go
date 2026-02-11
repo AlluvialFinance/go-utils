@@ -19,7 +19,7 @@ func (c *Client) getBlock(ctx context.Context, blockID string) (*bellatrix.Signe
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlock", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlock", resp, "Failure sending request")
 	}

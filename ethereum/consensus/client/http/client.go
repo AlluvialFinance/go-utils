@@ -63,11 +63,6 @@ func (c *Client) SetLogger(logger logrus.FieldLogger) {
 	c.logger = logger.WithField("component", "eth.consensus.client")
 }
 
-// do performs an HTTP request.
-func (c *Client) do(req *http.Request) (*http.Response, error) {
-	return c.client.Do(req)
-}
-
 func newRequest(ctx context.Context) *http.Request {
 	req, _ := http.NewRequestWithContext(ctx, "", "", http.NoBody)
 	if traceID := tracing.GetTraceID(ctx); traceID != "" {

@@ -21,7 +21,7 @@ func (c *Client) getBlockHeader(ctx context.Context, blockID string) (*types.Bea
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockHeader", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockHeader", resp, "Failure sending request")
 	}

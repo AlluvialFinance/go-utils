@@ -21,7 +21,7 @@ func (c *Client) getStateFinalityCheckpoints(ctx context.Context, stateID string
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateFinalityCheckpoints", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateFinalityCheckpoints", resp, "Failure sending request")
 	}

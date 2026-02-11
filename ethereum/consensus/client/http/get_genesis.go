@@ -20,7 +20,7 @@ func (c *Client) getGenesis(ctx context.Context) (*types.Genesis, error) {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetGenesis", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetGenesis", resp, "Failure sending request")
 	}

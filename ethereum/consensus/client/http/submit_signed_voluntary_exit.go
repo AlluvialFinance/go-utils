@@ -36,7 +36,7 @@ func (c *Client) submitSignedVoluntaryExit(ctx context.Context, epoch beaconcomm
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", resp, "Failure sending request")
 	}

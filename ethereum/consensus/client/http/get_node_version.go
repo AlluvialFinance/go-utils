@@ -18,7 +18,7 @@ func (c *Client) getNodeVersion(ctx context.Context) (string, error) {
 		return "", autorest.NewErrorWithError(err, "eth2http.Client", "GetNodeVersion", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return "", autorest.NewErrorWithError(err, "eth2http.Client", "GetNodeVersion", resp, "Failure sending request")
 	}

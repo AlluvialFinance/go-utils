@@ -19,7 +19,7 @@ func (c *Client) getAttesterSlashings(ctx context.Context) (beaconphase0.Atteste
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetAttesterSlashings", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetAttesterSlashings", resp, "Failure sending request")
 	}

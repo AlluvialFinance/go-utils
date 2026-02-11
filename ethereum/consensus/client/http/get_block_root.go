@@ -19,7 +19,7 @@ func (c *Client) getBlockRoot(ctx context.Context, blockID string) (*beaconcommo
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockRoot", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockRoot", resp, "Failure sending request")
 	}

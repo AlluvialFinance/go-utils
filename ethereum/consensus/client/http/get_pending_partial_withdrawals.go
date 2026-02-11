@@ -23,7 +23,7 @@ func (c *Client) getPendingPartialWithdrawals(ctx context.Context, stateID strin
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetPendingPartialWithdrawals", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetPendingPartialWithdrawals", resp, "Failure sending request")
 	}

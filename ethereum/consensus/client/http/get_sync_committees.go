@@ -22,7 +22,7 @@ func (c *Client) getSyncCommittees(ctx context.Context, stateID string, epoch *b
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSyncCommittees", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSyncCommittees", resp, "Failure sending request")
 	}

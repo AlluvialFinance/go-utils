@@ -19,7 +19,7 @@ func (c *Client) getProposerSlashings(ctx context.Context) (beaconphase0.Propose
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetProposerSlashings", nil, "Failure preparing request")
 	}
 
-	resp, err := c.do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetProposerSlashings", resp, "Failure sending request")
 	}
