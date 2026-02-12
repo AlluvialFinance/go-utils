@@ -20,10 +20,10 @@ const (
 
 // FromBlockNumArg decodes a string into a big.Int block number
 func FromBlockNumArg(s string) (*big.Int, error) {
-	switch {
-	case s == pending:
+	switch s {
+	case pending:
 		return big.NewInt(-1), nil
-	case s == latest:
+	case latest:
 		return nil, nil
 	default:
 		b, err := DecodeBig(s)
@@ -74,8 +74,8 @@ func DecodeBig(s string) (*big.Int, error) {
 // - <0 to a hex with -0x prefix
 // - <nil> to ""
 func EncodeBig(b *big.Int) string {
-	switch {
-	case b == nil:
+	switch b {
+	case nil:
 		return ""
 	default:
 		return hexutil.EncodeBig(b)

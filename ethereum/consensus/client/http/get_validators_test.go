@@ -8,11 +8,10 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
 	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetValidators(t *testing.T) {

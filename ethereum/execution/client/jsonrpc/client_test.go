@@ -15,17 +15,14 @@ import (
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	jsonrpchttp "github.com/kilnfi/go-utils/net/jsonrpc/http"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var (
-	//go:embed testdata
-	testdataFS embed.FS
-)
+//go:embed testdata
+var testdataFS embed.FS
 
 func TestClientImplementsGetBindingInterface(t *testing.T) {
 	client := new(Client)

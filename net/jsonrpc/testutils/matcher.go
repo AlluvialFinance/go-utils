@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
-
 	jsonrpc "github.com/kilnfi/go-utils/net/jsonrpc"
 )
 

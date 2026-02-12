@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
-
 	"github.com/kilnfi/go-utils/net/jsonrpc"
 	jsonrpctestutils "github.com/kilnfi/go-utils/net/jsonrpc/testutils"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithVersion(t *testing.T) {

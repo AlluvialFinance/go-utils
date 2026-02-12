@@ -47,6 +47,7 @@ func NewCmdEthEL(
 
 	return cmds
 }
+
 func newCmdEthELChainID(ctx *ethELContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "chain-id",

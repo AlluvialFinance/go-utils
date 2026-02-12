@@ -1,12 +1,11 @@
 package hashicorp
 
 import (
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	cmdutils "github.com/kilnfi/go-utils/cmd/utils"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 var tlsFlag kilntls.FlagPrefixer

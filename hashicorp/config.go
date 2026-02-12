@@ -6,12 +6,11 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/vault/api"
-	"golang.org/x/time/rate"
-
 	"github.com/kilnfi/go-utils/common"
 	kilntypes "github.com/kilnfi/go-utils/common/types"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"golang.org/x/time/rate"
 )
 
 // ClientConfig object that be converted into an api.Config later

@@ -91,6 +91,7 @@ func (c *KVv2Client) validateAddress() (err error) {
 
 	return nil
 }
+
 func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 	c.logger.Info("authenticate on Vault")
 	defer func() {
@@ -101,7 +102,7 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 
 	if c.cfg.Auth == nil {
 		err = fmt.Errorf("vault authentication credentials missing")
-		return
+		return err
 	}
 
 	// Vault token has been provided
@@ -134,7 +135,7 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 
 	err = fmt.Errorf("vault authentication credentials missing")
 
-	return
+	return err
 }
 
 func (c *KVv2Client) initKVv2(ctx context.Context) error {
@@ -167,7 +168,6 @@ func (c *KVv2Client) GithubLogin(ctx context.Context) (*api.SecretAuth, error) {
 			"token": strings.TrimSpace(c.cfg.Auth.GitHubToken),
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func (c *KVv2Client) Get(ctx context.Context, pth, version string) (secret *api.
 		query,
 	)
 	if err != nil {
-		return
+		return secret, data, metadata, err
 	}
 
 	if secret == nil || secret.Data["data"] == nil {
@@ -250,7 +250,7 @@ func (c *KVv2Client) Get(ctx context.Context, pth, version string) (secret *api.
 		return secret, nil, nil, fmt.Errorf("invalid hashicorp vault response metadata: %v", secret.Data["metadata"])
 	}
 
-	return
+	return secret, data, metadata, err
 }
 
 func (c *KVv2Client) List(ctx context.Context, pth string) ([]string, error) {
@@ -303,14 +303,14 @@ func (c *KVv2Client) metadaDataPath(id string) string {
 func (c *KVv2Client) kvPreflightVersionRequest(ctx context.Context, pth string) (mountPath string, version int, err error) {
 	// We don't want to use a wrapping call here so save any custom value and
 	// restore after
-	currentWrappingLookupFunc := c.Client.CurrentWrappingLookupFunc()
-	c.Client.SetWrappingLookupFunc(nil)
-	defer c.Client.SetWrappingLookupFunc(currentWrappingLookupFunc)
-	currentOutputCurlString := c.Client.OutputCurlString()
-	c.Client.SetOutputCurlString(false)
-	defer c.Client.SetOutputCurlString(currentOutputCurlString)
+	currentWrappingLookupFunc := c.CurrentWrappingLookupFunc()
+	c.SetWrappingLookupFunc(nil)
+	defer c.SetWrappingLookupFunc(currentWrappingLookupFunc)
+	currentOutputCurlString := c.OutputCurlString()
+	c.SetOutputCurlString(false)
+	defer c.SetOutputCurlString(currentOutputCurlString)
 
-	r := c.Client.NewRequest("GET", path.Join("/v1/sys/internal/ui/mounts", pth))
+	r := c.NewRequest("GET", path.Join("/v1/sys/internal/ui/mounts", pth))
 
 	resp, err := c.Client.RawRequestWithContext(ctx, r) //nolint
 	if resp != nil {

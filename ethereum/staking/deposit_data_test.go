@@ -102,7 +102,7 @@ func TestDepositDataSignAndVerifySignature(t *testing.T) {
 	err = withdrawalCreds.UnmarshalText([]byte("0100000000000000000000007e654d251da770a068413677967f6d3ea2fea9e4"))
 	require.NoError(t, err)
 
-	var tests = []struct {
+	tests := []struct {
 		desc              string
 		vkey              *ValidatorKey
 		version           beaconcommon.Version
@@ -176,7 +176,7 @@ func TestValidateDepositData(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var tests = []struct {
+	tests := []struct {
 		desc string
 
 		raw             []byte
@@ -306,7 +306,7 @@ func TestValidateDepositData(t *testing.T) {
 }
 
 func TestValidateDepositDataWithoutGlobalWithdrawalCredentials(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		desc        string
 		raw         []byte
 		version     beaconcommon.Version

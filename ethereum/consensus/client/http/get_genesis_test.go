@@ -9,12 +9,11 @@ import (
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
+	"github.com/kilnfi/go-utils/ethereum/consensus/types"
+	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	beaconcommon "github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/kilnfi/go-utils/ethereum/consensus/types"
-	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 )
 
 func TestGetGenesis(t *testing.T) {

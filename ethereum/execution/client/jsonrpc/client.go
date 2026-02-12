@@ -14,14 +14,13 @@ import (
 	gethhexutil "github.com/ethereum/go-ethereum/common/hexutil"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	gethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/sirupsen/logrus"
-
 	"github.com/kilnfi/go-utils/common/interfaces"
 	"github.com/kilnfi/go-utils/ethereum/execution/client"
 	"github.com/kilnfi/go-utils/ethereum/execution/types"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
 	jsonrpchttp "github.com/kilnfi/go-utils/net/jsonrpc/http"
 	"github.com/kilnfi/go-utils/tracing"
+	"github.com/sirupsen/logrus"
 )
 
 // Ensure Client interface is fully implemented

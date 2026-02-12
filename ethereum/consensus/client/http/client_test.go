@@ -6,9 +6,8 @@ package eth2http
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	eth2client "github.com/kilnfi/go-utils/ethereum/consensus/client"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClientImplementsInterface(t *testing.T) {

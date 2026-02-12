@@ -7,12 +7,11 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/sirupsen/logrus"
-
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
 	"github.com/kilnfi/go-utils/tracing"
+	"github.com/sirupsen/logrus"
 )
 
 // Client allows to connect to a JSON-RPC server
@@ -148,7 +147,6 @@ func inspectCallResponseMsg(msg *responseMsg, res interface{}) error {
 	}
 
 	return nil
-
 }
 
 func inspectCallResponse(resp *http.Response, res interface{}) error {

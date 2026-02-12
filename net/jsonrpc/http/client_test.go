@@ -9,11 +9,10 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientImplementseth2Interface(t *testing.T) {

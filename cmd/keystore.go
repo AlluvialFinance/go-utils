@@ -62,9 +62,7 @@ func newCmdGenerateEth1Key(ctx *keystoreContext) *cobra.Command {
 }
 
 func newCmdImportEth1Key(ctx *keystoreContext) *cobra.Command {
-	var (
-		pkey string
-	)
+	var pkey string
 
 	cmd := &cobra.Command{
 		Use:   "import",

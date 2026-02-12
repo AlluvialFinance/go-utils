@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
-
 	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
 	beaconcommon "github.com/protolambda/zrnt/eth2/beacon/common"
 	beaconphase0 "github.com/protolambda/zrnt/eth2/beacon/phase0"

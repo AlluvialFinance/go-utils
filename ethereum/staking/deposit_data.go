@@ -107,8 +107,8 @@ func (data *DepositData) MarshalJSON() ([]byte, error) {
 		Signature:             data.Signature,
 		Version:               data.Version,
 		Network:               data.Network(),
-		DepositMessageRoot:    data.DepositData.MessageRoot(),
-		DepositDataRoot:       data.DepositData.HashTreeRoot(tree.GetHashFn()),
+		DepositMessageRoot:    data.MessageRoot(),
+		DepositDataRoot:       data.HashTreeRoot(tree.GetHashFn()),
 	}
 
 	return json.Marshal(d)

@@ -3,9 +3,8 @@ package flag
 import (
 	"math/big"
 
-	"github.com/spf13/pflag"
-
 	"github.com/kilnfi/go-utils/ethereum/execution/types"
+	"github.com/spf13/pflag"
 )
 
 type blockNumberValue struct {

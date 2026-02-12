@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 )
 
 func TestGetPendingPartialWithdrawals(t *testing.T) {

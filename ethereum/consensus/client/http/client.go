@@ -6,11 +6,10 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/sirupsen/logrus"
-
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
 	"github.com/kilnfi/go-utils/tracing"
+	"github.com/sirupsen/logrus"
 )
 
 var silentLog = &logrus.Logger{
