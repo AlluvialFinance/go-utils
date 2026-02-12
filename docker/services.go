@@ -52,10 +52,13 @@ func (opts *PostgresServiceOpts) SQLConfig(container *dockercontainer.InspectRes
 	if err != nil {
 		return nil, err
 	}
+	if port < 0 || port > 65535 {
+		return nil, fmt.Errorf("port %d out of valid range", port)
+	}
 
 	return (&kilnsql.Config{
 		Host:     portBindings[0].HostIP,
-		Port:     uint16(port), //nolint:gosec // ephemeral port is validated by docker API
+		Port:     uint16(port),
 		User:     opts.User,
 		Password: opts.Password,
 		Dialect:  pgDialect,

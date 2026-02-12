@@ -8,7 +8,7 @@ import (
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
 
-	_ "github.com/kilnfi/go-utils/crypto/bls" //nolint
+	_ "github.com/kilnfi/go-utils/crypto/bls" // required for side-effect BLS crypto initialization
 )
 
 type ValidatorKey struct {

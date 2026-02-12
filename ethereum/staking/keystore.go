@@ -89,8 +89,8 @@ func (mngr *KeystoreManager) DecryptFromKeystore(ks map[string]interface{}, pwd 
 		vkey.Path, _ = pth.(string)
 	}
 
-	if uuid, ok := ks["uuid"]; ok {
-		vkey.UUID, _ = uuid.(string)
+	if uuidValue, ok := ks["uuid"]; ok {
+		vkey.UUID, _ = uuidValue.(string)
 	}
 
 	if desc, ok := ks["description"]; ok {

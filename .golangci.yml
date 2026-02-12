@@ -40,8 +40,6 @@ linters:
           disabled: true
         - name: unchecked-type-assertion
           disabled: true
-        - name: import-shadowing
-          disabled: true
         - name: cognitive-complexity
           disabled: true
         - name: var-naming
