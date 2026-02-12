@@ -1,57 +1,122 @@
-linters-settings:
-  govet:
-    check-shadowing: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  golint:
-    min-confidence: 0
-  gocyclo:
-    min-complexity: 10
-  maligned:
-    suggest-new: true
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 5
-    min-occurrences: 2
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-  depguard:
-    list-type: blacklist
-  gocritic:
-    enabled-tags:
-      - performance
-      - style
-      - experimental
-    disabled-checks:
-      - wrapperFunc
-
+version: "2"
+run:
+  tests: true
 linters:
+  default: none
   enable:
+    - copyloopvar
+    - errcheck
     - goconst
-    - goimports
     - gocritic
-    - revive
+    - gosec
+    - govet
+    - ineffassign
     - misspell
-    - stylecheck
+    - nakedret
+    - revive
+    - staticcheck
+    - thelper
     - unconvert
     - unparam
-
+    - unused
+    - usetesting
+  settings:
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: use-any
+          disabled: true
+        - name: if-return
+          disabled: true
+        - name: max-public-structs
+          disabled: true
+        - name: unchecked-type-assertion
+          disabled: true
+        - name: import-shadowing
+          disabled: true
+        - name: cognitive-complexity
+          disabled: true
+        - name: var-naming
+          disabled: true
+        - name: argument-limit
+          disabled: true
+        - name: cyclomatic
+          disabled: true
+        - name: file-header
+          disabled: true
+        - name: function-length
+          disabled: true
+        - name: function-result-limit
+          disabled: true
+        - name: line-length-limit
+          disabled: true
+        - name: flag-parameter
+          disabled: true
+        - name: add-constant
+          disabled: true
+        - name: empty-lines
+          disabled: true
+        - name: unused-receiver
+          disabled: true
+        - name: banned-characters
+          disabled: true
+        - name: deep-exit
+          disabled: true
+        - name: confusing-results
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: modifies-value-receiver
+          disabled: true
+        - name: early-return
+          disabled: true
+        - name: confusing-naming
+          disabled: true
+        - name: defer
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: unhandled-error
+          arguments:
+            - b.WriteString
+            - respJSON.Write
+            - fmt.Printf
+            - fmt.Print
+            - fmt.Println
+            - fmt.Fprintf
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - revive
+        text: differs only by capitalization to method
+      # - linters:
+      #     - gosec
+      #   text: Use of weak random number generator
+      - linters:
+          - revive
+        text: "unknown option \"inline\" in json tag"
 issues:
-  max-same-issues: 10
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
+formatters:
+  enable:
+    - gci
+    - gofumpt
+  # settings:
+  #   gci:
+  #     sections:
+  #       - standard
+  #       - default
+  #       - blank
+  #       - dot
+  #       - prefix(github.com/alluvialfinance)
+  #     custom-order: true
 
-run:
-  deadline: 20m
-  skip-dirs:
-    - .gocache
-    - build
-    - mock
-    - deps
-    - vendor
+

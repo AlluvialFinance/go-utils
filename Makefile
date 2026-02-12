@@ -17,7 +17,7 @@ INTEGRATION_COVERAGE_OUT = $(COVERAGE_BUILD_FOLDER)/it_cov.out
 INTEGRATION_COVERAGE_HTML =$(COVERAGE_BUILD_FOLDER)/it_index.html
 
 # Test lint variables
-GOLANGCI_VERSION = v1.64.8
+GOLANGCI_VERSION = v2.8.0
 
 MOCKGEN = go run github.com/golang/mock/mockgen@v1.6.0 \
 
@@ -50,10 +50,10 @@ fix-lint: lint-fix ## Run linter to fix issues
 test-lint: lint ## Check linting
 
 lint:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_VERSION) run
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION) run
 
 lint-fix:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_VERSION) run --fix --issues-exit-code=0
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION) run --fix --issues-exit-code=0
 
 .PHONY: lint lint-fix
 
