@@ -20,7 +20,10 @@ func (c *Client) getStateRoot(ctx context.Context, stateID string) (*beaconcommo
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateRoot", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspect*Response via autorest.ByClosing
+	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateRoot", resp, "Failure sending request")
 	}

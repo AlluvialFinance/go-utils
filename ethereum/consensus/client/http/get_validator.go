@@ -20,7 +20,10 @@ func (c *Client) getValidator(ctx context.Context, stateID, validatorID string) 
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetValidator", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspect*Response via autorest.ByClosing
+	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetValidator", resp, "Failure sending request")
 	}

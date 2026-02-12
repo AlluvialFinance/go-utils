@@ -1,8 +1,9 @@
-//nolint:revive // package name intentionally reflects domain, not directory name
+//revive:disable-next-line:package-directory-mismatch
 package gethkeystore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -11,7 +12,7 @@ import (
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	gethcrypto "github.com/ethereum/go-ethereum/crypto"
-	keystore "github.com/kilnfi/go-utils/keystore"
+	"github.com/kilnfi/go-utils/keystore"
 )
 
 var _ keystore.Store = &KeyStore{}
@@ -76,11 +77,11 @@ func (s *KeyStore) HasAccount(_ context.Context, addr gethcommon.Address) (bool,
 
 func (s *KeyStore) SignerAddress(_ context.Context) (gethcommon.Address, error) {
 	if s.keys == nil {
-		return gethcommon.Address{}, fmt.Errorf("no cached keys")
+		return gethcommon.Address{}, errors.New("no cached keys")
 	}
 	accs := s.keys.Accounts()
 	if len(accs) < 1 {
-		return gethcommon.Address{}, fmt.Errorf("keystore has no accounts")
+		return gethcommon.Address{}, errors.New("keystore has no accounts")
 	}
 	// select first (primary account) address
 	return accs[0].Address, nil

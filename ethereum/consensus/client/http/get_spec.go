@@ -21,7 +21,10 @@ func (c *Client) getSpec(ctx context.Context) (*beaconcommon.Spec, error) {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSpec", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspect*Response via autorest.ByClosing
+	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSpec", resp, "Failure sending request")
 	}

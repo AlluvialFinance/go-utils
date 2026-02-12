@@ -77,7 +77,10 @@ func (c *Client) call(ctx context.Context, r *jsonrpc.Request, res interface{}) 
 		return autorest.NewErrorWithError(err, "jsonrpchttp.Client", "Call", nil, "Request")
 	}
 
-	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspectCallResponse via autorest.ByClosing
+	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		msg, _ := json.Marshal(r)
 		return autorest.NewErrorWithError(err, "jsonrpchttp.Client", fmt.Sprintf("Call(%v)", string(msg)), resp, "Do")
