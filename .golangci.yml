@@ -80,8 +80,6 @@ linters:
           disabled: true
         - name: defer
           disabled: true
-        - name: unused-parameter
-          disabled: true
         - name: unhandled-error
           arguments:
             - b.WriteString
