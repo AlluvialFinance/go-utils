@@ -132,7 +132,8 @@ func (opts *TraefikServiceOpts) Addr(container *dockercontainer.InspectResponse)
 		return "", err
 	}
 
-	return fmt.Sprintf("http://%v:%v", portBindings[0].HostIP, portBindings[0].HostPort), nil //nolint:revive // docker service endpoint is intentionally plain HTTP
+	//revive:disable-next-line:unsecure-url-scheme
+	return fmt.Sprintf("http://%v:%v", portBindings[0].HostIP, portBindings[0].HostPort), nil
 }
 
 func NewTreafikServiceConfig(opts *TraefikServiceOpts) (*ServiceConfig, error) {
