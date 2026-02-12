@@ -1,5 +1,4 @@
 //go:build !integration
-// +build !integration
 
 package http
 
@@ -17,7 +16,7 @@ func TestDecodeJSONObject(t *testing.T) {
 		Key string `json:"key"`
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key": "foo"}`)))
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key": "foo"}`)))
 	err := DecodeJSON(req, &s)
 	require.NoError(t, err)
 	assert.Equal(t, "foo", s.Key)
@@ -25,7 +24,7 @@ func TestDecodeJSONObject(t *testing.T) {
 
 func TestDecodeJSONStringSlice(t *testing.T) {
 	var s []string
-	req, _ := http.NewRequest(http.MethodGet, "/", bytes.NewBuffer([]byte(`["foo","bar"]`)))
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer([]byte(`["foo","bar"]`)))
 	err := DecodeJSON(req, &s)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"foo", "bar"}, s)
@@ -35,7 +34,7 @@ func TestDecodeJSONObjectSlice(t *testing.T) {
 	var s []struct {
 		Key string `json:"key"`
 	}
-	req, _ := http.NewRequest(http.MethodGet, "/", bytes.NewBuffer([]byte(`[{"key": "foo"},{"key": "bar"}]`)))
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer([]byte(`[{"key": "foo"},{"key": "bar"}]`)))
 	err := DecodeJSON(req, &s)
 	require.NoError(t, err)
 	require.Len(t, s, 2)
@@ -48,15 +47,15 @@ func TestDecodeMalformedJSONObject(t *testing.T) {
 		Key string `json:"key"`
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key: "foo"}`)))
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key: "foo"}`)))
 	err := DecodeJSON(req, &s)
 	require.Error(t, err)
 
-	req, _ = http.NewRequest(http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key":foo"}`)))
+	req, _ = http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key":foo"}`)))
 	err = DecodeJSON(req, &s)
 	require.Error(t, err)
 
-	req, _ = http.NewRequest(http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key": "foo,"key2":"bar"}`)))
+	req, _ = http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer([]byte(`{"key": "foo,"key2":"bar"}`)))
 	err = DecodeJSON(req, &s)
 	require.Error(t, err)
 
@@ -72,7 +71,7 @@ func TestDecodeMalformedJSONObject(t *testing.T) {
 			]
 		}
 	]`)
-	req, _ = http.NewRequest(http.MethodGet, "/", bytes.NewBuffer(b))
+	req, _ = http.NewRequestWithContext(t.Context(), http.MethodGet, "/", bytes.NewBuffer(b))
 
 	var arr []struct {
 		Key1 string `json:"key1"`
@@ -89,7 +88,7 @@ func TestParseQueryObject(t *testing.T) {
 		Str  string `json:"str"`
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "/?bool=true&num=42&str=foobar", http.NoBody)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "/?bool=true&num=42&str=foobar", http.NoBody)
 	err := ParseQuery(req, &s)
 
 	require.NoError(t, err)

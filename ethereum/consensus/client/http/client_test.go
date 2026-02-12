@@ -1,6 +1,6 @@
 //go:build !integration
-// +build !integration
 
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (

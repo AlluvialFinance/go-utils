@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -19,7 +20,7 @@ func (c *Client) getStateFork(ctx context.Context, stateID string) (*beaconcommo
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateFork", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspect*Response via autorest.ByClosing
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetStateFork", resp, "Failure sending request")
 	}

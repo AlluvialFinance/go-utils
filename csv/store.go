@@ -29,7 +29,7 @@ func NewStore(path string) *Store {
 func (s *Store) Open(createIfNotExist bool) (err error) {
 	s.f, err = openFile(s.path, createIfNotExist)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Set csv reader and writer

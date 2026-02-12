@@ -2,6 +2,7 @@ package staking
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -66,12 +67,12 @@ func (mngr *KeystoreManager) DecryptFromKeystore(ks map[string]interface{}, pwd 
 
 	cryptoKs, ok := ks["crypto"]
 	if !ok {
-		return nil, fmt.Errorf("invalid keystore missing \"crypto\" field")
+		return nil, errors.New("invalid keystore missing \"crypto\" field")
 	}
 
 	iKs, ok := cryptoKs.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid \"crypto\" keystore format")
+		return nil, errors.New("invalid \"crypto\" keystore format")
 	}
 
 	bytes, err := mngr.scryptEncryptor.Decrypt(iKs, pwd)
@@ -88,8 +89,8 @@ func (mngr *KeystoreManager) DecryptFromKeystore(ks map[string]interface{}, pwd 
 		vkey.Path, _ = pth.(string)
 	}
 
-	if UUID, ok := ks["uuid"]; ok {
-		vkey.UUID, _ = UUID.(string)
+	if uuid, ok := ks["uuid"]; ok {
+		vkey.UUID, _ = uuid.(string)
 	}
 
 	if desc, ok := ks["description"]; ok {

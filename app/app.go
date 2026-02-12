@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -152,11 +152,11 @@ func (app *App) registerBaseMetrics() {
 
 func (app *App) livecheck(context.Context) error {
 	if app.isStatus(statusInitErr) {
-		return fmt.Errorf("app initilalization failed")
+		return errors.New("app initilalization failed")
 	}
 
 	if app.isStatus(statusStopped) {
-		return fmt.Errorf("app stopped")
+		return errors.New("app stopped")
 	}
 
 	return nil
@@ -164,19 +164,19 @@ func (app *App) livecheck(context.Context) error {
 
 func (app *App) readycheck(context.Context) error {
 	if app.isStatus("") {
-		return fmt.Errorf("app has not yet been started")
+		return errors.New("app has not yet been started")
 	}
 
 	if app.isStatus(statusInitializing) {
-		return fmt.Errorf("app is initializing")
+		return errors.New("app is initializing")
 	}
 
 	if app.isStatus(statusStarting) {
-		return fmt.Errorf("app is starting")
+		return errors.New("app is starting")
 	}
 
 	if app.isStatus(statusStopping) {
-		return fmt.Errorf("app is stopping")
+		return errors.New("app is stopping")
 	}
 
 	return nil
@@ -337,7 +337,7 @@ func (app *App) startServices(ctx context.Context) (err error) {
 	app.logger.Infof("services successfully started")
 	app.setStatus(statusRunning)
 
-	return
+	return nil
 }
 
 func (app *App) stopServices(ctx context.Context) error {
@@ -596,7 +596,7 @@ func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request,
 		runtime.ReadMemStats(&memAfter)
 		fields["mem_before_alloc_mb"] = bToMb(memBefore.Alloc)
 		fields["mem_after_alloc_mb"] = bToMb(memAfter.Alloc)
-		fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
+		fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc)) //nolint:gosec // memory metrics are bounded and fit int64 in practice
 		fields["mem_after_heap_inuse_mb"] = bToMb(memAfter.HeapInuse)
 		fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
 	}
@@ -656,9 +656,9 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
 
 			// Delta stats (most important for identifying memory spikes)
-			fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
-			fields["mem_delta_heap_alloc_mb"] = int64(bToMb(memAfter.HeapAlloc)) - int64(bToMb(memBefore.HeapAlloc))
-			fields["mem_delta_heap_inuse_mb"] = int64(bToMb(memAfter.HeapInuse)) - int64(bToMb(memBefore.HeapInuse))
+			fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))              //nolint:gosec // memory metrics are bounded and fit int64 in practice
+			fields["mem_delta_heap_alloc_mb"] = int64(bToMb(memAfter.HeapAlloc)) - int64(bToMb(memBefore.HeapAlloc)) //nolint:gosec // memory metrics are bounded and fit int64 in practice
+			fields["mem_delta_heap_inuse_mb"] = int64(bToMb(memAfter.HeapInuse)) - int64(bToMb(memBefore.HeapInuse)) //nolint:gosec // memory metrics are bounded and fit int64 in practice
 		}
 
 		// Log the request in JSON format
@@ -700,7 +700,7 @@ func (rw *responseWriter) Flush() {
 func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	h, ok := rw.ResponseWriter.(http.Hijacker)
 	if !ok {
-		return nil, nil, fmt.Errorf("underlying ResponseWriter does not support hijacking")
+		return nil, nil, errors.New("underlying ResponseWriter does not support hijacking")
 	}
 	return h.Hijack()
 }

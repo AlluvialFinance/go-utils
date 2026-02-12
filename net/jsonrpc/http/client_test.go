@@ -1,10 +1,10 @@
 //go:build !integration
-// +build !integration
 
+//nolint:revive // package name intentionally reflects domain, not directory name
 package jsonrpchttp
 
 import (
-	"context"
+	"errors"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -34,6 +34,7 @@ func TestCall(t *testing.T) {
 }
 
 func testCallStatusOKAndValidResult(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"2.0","method":"concat","params":["a","b","c"],"id":0}`)).
@@ -44,7 +45,7 @@ func testCallStatusOKAndValidResult(t *testing.T, c *Client, mockCli *httptestut
 
 	var res string
 	err := c.Call(
-		context.Background(),
+		t.Context(),
 		&jsonrpc.Request{
 			Version: "2.0",
 			Method:  "concat",
@@ -63,6 +64,7 @@ func testCallStatusOKAndValidResult(t *testing.T, c *Client, mockCli *httptestut
 }
 
 func testCallStatusOKAndError(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"2.0","method":"concat","params":["a","b","c"],"id":0}`)).
@@ -73,7 +75,7 @@ func testCallStatusOKAndError(t *testing.T, c *Client, mockCli *httptestutils.Mo
 
 	var res string
 	err := c.Call(
-		context.Background(),
+		t.Context(),
 		&jsonrpc.Request{
 			Version: "2.0",
 			Method:  "concat",
@@ -85,17 +87,20 @@ func testCallStatusOKAndError(t *testing.T, c *Client, mockCli *httptestutils.Mo
 
 	require.Error(t, err)
 	require.IsType(t, autorest.DetailedError{}, err)
+	var detailedErr autorest.DetailedError
+	require.True(t, errors.As(err, &detailedErr))
 	assert.Equal(
 		t,
 		&jsonrpc.ErrorMsg{
 			Code:    -32000,
 			Message: "invalid test method",
 		},
-		err.(autorest.DetailedError).Original,
+		detailedErr.Original,
 	)
 }
 
 func testCallStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		Reply(400)
@@ -104,7 +109,7 @@ func testCallStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSende
 
 	var res string
 	err := c.Call(
-		context.Background(),
+		t.Context(),
 		&jsonrpc.Request{
 			Version: "2.0",
 			Method:  "concat",

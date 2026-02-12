@@ -1,5 +1,4 @@
 //go:build !integration
-// +build !integration
 
 package sql
 
@@ -7,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +42,7 @@ func TestFlags(t *testing.T) {
 			SSLCA:          "./ca.pem",
 			SSLCert:        "./cert.pem",
 			SSLKey:         "./key.pem",
-			ConnectTimeout: &types.Duration{Duration: 120 * time.Second},
+			ConnectTimeout: &common.Duration{Duration: 120 * time.Second},
 		},
 		cfg,
 	)

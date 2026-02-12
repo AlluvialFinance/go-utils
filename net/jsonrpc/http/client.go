@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package jsonrpchttp
 
 import (
@@ -76,7 +77,7 @@ func (c *Client) call(ctx context.Context, r *jsonrpc.Request, res interface{}) 
 		return autorest.NewErrorWithError(err, "jsonrpchttp.Client", "Call", nil, "Request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspectCallResponse via autorest.ByClosing
 	if err != nil {
 		msg, _ := json.Marshal(r)
 		return autorest.NewErrorWithError(err, "jsonrpchttp.Client", fmt.Sprintf("Call(%v)", string(msg)), resp, "Do")
@@ -141,7 +142,7 @@ func inspectCallResponseMsg(msg *responseMsg, res interface{}) error {
 	if msg.Result != nil && res != nil {
 		err := json.Unmarshal(*msg.Result, res)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal JSON-RPC result %v into %T (%v)", string(*msg.Result), res, err)
+			return fmt.Errorf("failed to unmarshal JSON-RPC result %v into %T (%w)", string(*msg.Result), res, err)
 		}
 		return nil
 	}

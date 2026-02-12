@@ -4,8 +4,11 @@ run:
 linters:
   default: none
   enable:
+    - bodyclose
+    - contextcheck
     - copyloopvar
     - errcheck
+    - errorlint
     - goconst
     - gocritic
     - gosec
@@ -13,9 +16,14 @@ linters:
     - ineffassign
     - misspell
     - nakedret
+    - nilnil
+    - noctx
+    - nolintlint
     - revive
+    - rowserrcheck
     - staticcheck
     - thelper
+    - tagalign
     - unconvert
     - unparam
     - unused
@@ -85,6 +93,10 @@ linters:
             - fmt.Println
             - fmt.Fprintf
           disabled: true
+    usetesting:
+      # Go 1.24+: prefer test-scoped context over root contexts in tests.
+      context-background: true
+      context-todo: true
   exclusions:
     generated: lax
     presets:
@@ -96,9 +108,9 @@ linters:
       - linters:
           - revive
         text: differs only by capitalization to method
-      # - linters:
-      #     - gosec
-      #   text: Use of weak random number generator
+      - linters:
+          - gosec
+        text: Use of weak random number generator
       - linters:
           - revive
         text: "unknown option \"inline\" in json tag"
@@ -109,14 +121,14 @@ formatters:
   enable:
     - gci
     - gofumpt
-  # settings:
-  #   gci:
-  #     sections:
-  #       - standard
-  #       - default
-  #       - blank
-  #       - dot
-  #       - prefix(github.com/alluvialfinance)
-  #     custom-order: true
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - blank
+        - dot
+        - prefix(github.com/alluvialfinance)
+      custom-order: true
 
 

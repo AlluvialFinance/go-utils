@@ -1,10 +1,9 @@
 //go:build !integration
-// +build !integration
 
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
-	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -25,6 +24,7 @@ func TestGetValidators(t *testing.T) {
 }
 
 func testGetValidatorsStatusOK(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Get("/eth/v1/beacon/states/test-state/validators").
 		MatchParams(map[string]string{
@@ -36,7 +36,7 @@ func testGetValidatorsStatusOK(t *testing.T, c *Client, mockCli *httptestutils.M
 
 	mockCli.EXPECT().Gock(req)
 
-	vals, err := c.GetValidators(context.Background(), "test-state", []string{"vA", "vB", "vC"}, []string{"sA", "sB"})
+	vals, err := c.GetValidators(t.Context(), "test-state", []string{"vA", "vB", "vC"}, []string{"sA", "sB"})
 	require.NoError(t, err)
 	assert.Equal(
 		t,

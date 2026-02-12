@@ -156,8 +156,6 @@ func (c *Client) HeaderByNumber(ctx context.Context, blockNumber *big.Int) (*get
 
 // CallContract executes contract call
 // The block number can be nil, in which case call is executed at the latest block.
-//
-//nolint:gocritic
 func (c *Client) CallContract(ctx context.Context, msg geth.CallMsg, blockNumber *big.Int) ([]byte, error) {
 	res := new(gethhexutil.Bytes)
 	err := c.call(ctx, res, "eth_call", toCallArg(&msg), types.ToBlockNumArg(blockNumber))
@@ -170,8 +168,6 @@ func (c *Client) CallContract(ctx context.Context, msg geth.CallMsg, blockNumber
 
 // CallContractAtHash is almost the same as CallContract except that it selects
 // the block by block hash instead of block height.
-//
-//nolint:gocritic
 func (c *Client) CallContractAtHash(ctx context.Context, msg geth.CallMsg, blockHash gethcommon.Hash) ([]byte, error) {
 	var res gethhexutil.Bytes
 	err := c.call(ctx, res, "eth_call", toCallArg(&msg), gethrpc.BlockNumberOrHashWithHash(blockHash, false))
@@ -242,8 +238,6 @@ func (c *Client) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
 
 // EstimateGas tries to estimate the gas needed to execute a specific transaction based on
 // the current pending state of the chain.
-//
-//nolint:gocritic
 func (c *Client) EstimateGas(ctx context.Context, msg geth.CallMsg) (uint64, error) {
 	res := new(gethhexutil.Uint64)
 	err := c.call(ctx, res, "eth_estimateGas", toCallArg(&msg))
@@ -278,12 +272,12 @@ func (c *Client) FilterLogs(ctx context.Context, q geth.FilterQuery) ([]gethtype
 
 // SubscribeFilterLogs subscribes to the results of a streaming filter query.
 func (c *Client) SubscribeFilterLogs(context.Context, geth.FilterQuery, chan<- gethtypes.Log) (geth.Subscription, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 // SubscribeTransactionReceipts subscribes to the results of a streaming transaction receipt query.
 func (c *Client) SubscribeTransactionReceipts(_ context.Context, _ *geth.TransactionReceiptsQuery, _ chan<- []*gethtypes.Receipt) (geth.Subscription, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 type feeHistoryResultMarshaling struct {
@@ -347,8 +341,6 @@ func (c *Client) PendingBalanceAt(ctx context.Context, account gethcommon.Addres
 
 // PendingCallContract executes a message call transaction using the EVM.
 // The state seen by the contract call is the pending state.
-//
-//nolint:gocritic
 func (c *Client) PendingCallContract(ctx context.Context, msg geth.CallMsg) ([]byte, error) {
 	var hex gethhexutil.Bytes
 	err := c.call(ctx, &hex, "eth_call", toCallArg(&msg), "pending")
@@ -381,11 +373,11 @@ func (c *Client) StorageAt(ctx context.Context, account gethcommon.Address, key 
 }
 
 func (c *Client) SubscribeNewHead(context.Context, chan<- *gethtypes.Header) (geth.Subscription, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (c *Client) SyncProgress(context.Context) (*geth.SyncProgress, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 // TransactionByHash returns the transaction with the given hash.
@@ -397,7 +389,7 @@ func (c *Client) TransactionByHash(ctx context.Context, hash gethcommon.Hash) (t
 	} else if res == nil {
 		return nil, false, geth.NotFound
 	} else if _, r, _ := res.Tx.RawSignatureValues(); r == nil {
-		return nil, false, fmt.Errorf("server returned transaction without signature")
+		return nil, false, errors.New("server returned transaction without signature")
 	}
 	if res.From != nil && res.BlockHash != nil {
 		setSenderFromServer(res.Tx, *res.From, *res.BlockHash)
@@ -422,7 +414,7 @@ func (c *Client) TransactionInBlock(ctx context.Context, blockHash gethcommon.Ha
 	if res == nil {
 		return nil, geth.NotFound
 	} else if _, r, _ := res.Tx.RawSignatureValues(); r == nil {
-		return nil, fmt.Errorf("server returned transaction without signature")
+		return nil, errors.New("server returned transaction without signature")
 	}
 	if res.From != nil && res.BlockHash != nil {
 		setSenderFromServer(res.Tx, *res.From, *res.BlockHash)
@@ -498,7 +490,7 @@ func toFilterArg(q geth.FilterQuery) (interface{}, error) {
 	if q.BlockHash != nil {
 		arg["blockHash"] = *q.BlockHash
 		if q.FromBlock != nil || q.ToBlock != nil {
-			return nil, fmt.Errorf("cannot specify both BlockHash and FromBlock/ToBlock")
+			return nil, errors.New("cannot specify both BlockHash and FromBlock/ToBlock")
 		}
 	} else {
 		if q.FromBlock == nil {
@@ -511,7 +503,6 @@ func toFilterArg(q geth.FilterQuery) (interface{}, error) {
 	return arg, nil
 }
 
-//nolint:gocritic
 func (c *Client) getBlock(ctx context.Context, method string, args ...interface{}) (*gethtypes.Block, error) {
 	var raw json.RawMessage
 	if err := c.call(ctx, &raw, method, args...); err != nil {
@@ -534,16 +525,16 @@ func (c *Client) getBlock(ctx context.Context, method string, args ...interface{
 	}
 	// Quick-verify transaction and uncle lists. This mostly helps with debugging the server.
 	if head.UncleHash == gethtypes.EmptyUncleHash && len(body.UncleHashes) > 0 {
-		return nil, fmt.Errorf("server returned non-empty uncle list but block header indicates no uncles")
+		return nil, errors.New("server returned non-empty uncle list but block header indicates no uncles")
 	}
 	if head.UncleHash != gethtypes.EmptyUncleHash && len(body.UncleHashes) == 0 {
-		return nil, fmt.Errorf("server returned empty uncle list but block header indicates uncles")
+		return nil, errors.New("server returned empty uncle list but block header indicates uncles")
 	}
 	if head.TxHash == gethtypes.EmptyRootHash && len(body.Transactions) > 0 {
-		return nil, fmt.Errorf("server returned non-empty transaction list but block header indicates no transactions")
+		return nil, errors.New("server returned non-empty transaction list but block header indicates no transactions")
 	}
 	if head.TxHash != gethtypes.EmptyRootHash && len(body.Transactions) == 0 {
-		return nil, fmt.Errorf("server returned empty transaction list but block header indicates transactions")
+		return nil, errors.New("server returned empty transaction list but block header indicates transactions")
 	}
 	// Load uncles because they are not included in the block response.
 	var uncles []*gethtypes.Header

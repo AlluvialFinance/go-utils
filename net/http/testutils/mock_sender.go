@@ -48,4 +48,3 @@ func (mr *MockSenderMockRecorder) Do(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockSender)(nil).Do), arg0)
 }
-

@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -36,7 +37,7 @@ func (c *Client) submitSignedVoluntaryExit(ctx context.Context, epoch beaconcomm
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspect*Response via autorest.ByClosing
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "SubmitSignedVoluntaryExit", resp, "Failure sending request")
 	}
@@ -61,8 +62,8 @@ func newSignedVoluntaryExitsRequest(ctx context.Context, signedVoluntaryExit *si
 func newSignedVoluntaryExit(epoch beaconcommon.Epoch, validatorIdx uint64, signature string) *signedVoluntaryExit {
 	return &signedVoluntaryExit{
 		Message: message{
-			Epoch:          strconv.Itoa(int(epoch)),
-			ValidatorIndex: strconv.Itoa(int(validatorIdx)),
+			Epoch:          strconv.FormatUint(uint64(epoch), 10),
+			ValidatorIndex: strconv.FormatUint(validatorIdx, 10),
 		},
 		Signature: signature,
 	}

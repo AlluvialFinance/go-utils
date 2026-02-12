@@ -3,7 +3,7 @@ package app
 import (
 	"time"
 
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnnet "github.com/kilnfi/go-utils/net"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
@@ -13,8 +13,8 @@ type Config struct {
 	Logger         *kilnlog.Config
 	Server         *kilnhttp.ServerConfig
 	Healthz        *kilnhttp.ServerConfig
-	StartTimeout   *types.Duration
-	StopTimeout    *types.Duration
+	StartTimeout   *common.Duration
+	StopTimeout    *common.Duration
 	LogMemoryUsage bool // Enable memory usage logging in HTTP middleware (for debugging)
 }
 
@@ -47,11 +47,11 @@ func (cfg *Config) SetDefault() *Config {
 	cfg.Healthz.SetDefault()
 
 	if cfg.StartTimeout == nil || cfg.StartTimeout.Duration == 0 {
-		cfg.StartTimeout = &types.Duration{Duration: 10 * time.Second}
+		cfg.StartTimeout = &common.Duration{Duration: 10 * time.Second}
 	}
 
 	if cfg.StopTimeout == nil || cfg.StopTimeout.Duration == 0 {
-		cfg.StopTimeout = &types.Duration{Duration: 10 * time.Second}
+		cfg.StopTimeout = &common.Duration{Duration: 10 * time.Second}
 	}
 
 	return cfg

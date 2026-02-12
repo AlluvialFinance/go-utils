@@ -24,11 +24,11 @@ func FromBlockNumArg(s string) (*big.Int, error) {
 	case pending:
 		return big.NewInt(-1), nil
 	case latest:
-		return nil, nil
+		return nil, nil //nolint:nilnil // nil means latest block number by API contract
 	default:
 		b, err := DecodeBig(s)
 		if err != nil {
-			return nil, fmt.Errorf("invalid block number: %v", err)
+			return nil, fmt.Errorf("invalid block number: %w", err)
 		}
 		return b, nil
 	}
@@ -57,7 +57,7 @@ func ToBlockNumArg(number *big.Int) string {
 func DecodeBig(s string) (*big.Int, error) {
 	switch {
 	case s == "":
-		return nil, nil
+		return nil, nil //nolint:nilnil // empty input intentionally maps to nil big.Int
 	case Has0xPrefix(s):
 		return hexutil.DecodeBig(s)
 	default:

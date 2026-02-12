@@ -1,7 +1,6 @@
 package tracing
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +20,7 @@ func TestNewTraceID(t *testing.T) {
 }
 
 func TestWithTraceID_and_GetTraceID(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Initially no trace ID
 	assert.Empty(t, GetTraceID(ctx))
@@ -35,7 +34,7 @@ func TestWithTraceID_and_GetTraceID(t *testing.T) {
 }
 
 func TestGetTraceID_empty_context(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	assert.Empty(t, GetTraceID(ctx))
 }
 
@@ -143,7 +142,7 @@ func TestConstants(t *testing.T) {
 }
 
 func TestWithParentTraceID_and_GetParentTraceID(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	assert.Empty(t, GetParentTraceID(ctx))
 
 	ctx = WithParentTraceID(ctx, "parent-123")
@@ -151,7 +150,7 @@ func TestWithParentTraceID_and_GetParentTraceID(t *testing.T) {
 }
 
 func TestStartSpan_no_existing_trace_id(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	ctx = StartSpan(ctx)
 
 	assert.NotEmpty(t, GetTraceID(ctx))
@@ -161,7 +160,7 @@ func TestStartSpan_no_existing_trace_id(t *testing.T) {
 
 func TestStartSpan_with_existing_trace_id(t *testing.T) {
 	upstream := "upstream-trace-abc"
-	ctx := WithTraceID(context.Background(), upstream)
+	ctx := WithTraceID(t.Context(), upstream)
 	ctx = StartSpan(ctx)
 
 	current := GetTraceID(ctx)

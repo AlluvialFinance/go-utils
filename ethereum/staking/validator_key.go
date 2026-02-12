@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	_ "github.com/kilnfi/go-utils/crypto/bls" // nolint
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
+
+	_ "github.com/kilnfi/go-utils/crypto/bls" //nolint
 )
 
 type ValidatorKey struct {

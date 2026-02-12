@@ -1,10 +1,8 @@
 //go:build !integration
-// +build !integration
 
 package jsonrpc_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -24,7 +22,7 @@ func TestWithVersion(t *testing.T) {
 		gomock.Any(),
 		jsonrpctestutils.HasVersion("2.0"),
 		gomock.Any())
-	err := c.Call(context.Background(), &jsonrpc.Request{}, nil)
+	err := c.Call(t.Context(), &jsonrpc.Request{}, nil)
 	require.NoError(t, err)
 }
 
@@ -39,13 +37,13 @@ func TestWithIncrementalID(t *testing.T) {
 		gomock.Any(),
 		jsonrpctestutils.HasID(uint32(0)),
 		gomock.Any())
-	err := c.Call(context.Background(), &jsonrpc.Request{}, nil)
+	err := c.Call(t.Context(), &jsonrpc.Request{}, nil)
 	require.NoError(t, err)
 
 	mockCli.EXPECT().Call(
 		gomock.Any(),
 		jsonrpctestutils.HasID(uint32(1)),
 		gomock.Any())
-	err = c.Call(context.Background(), &jsonrpc.Request{}, nil)
+	err = c.Call(t.Context(), &jsonrpc.Request{}, nil)
 	require.NoError(t, err)
 }

@@ -2,6 +2,7 @@ package hashicorp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -79,14 +80,14 @@ func (c *KVv2Client) validateAddress() (err error) {
 	}()
 
 	if c.cfg.Address == "" {
-		err = fmt.Errorf("missing Vault address")
+		err = errors.New("missing Vault address")
 		return err
 	}
 
 	// validate vault address
 	_, err = url.Parse(c.cfg.Address)
 	if err != nil {
-		return fmt.Errorf("invalid Vault address %q [err=%v]", c.cfg.Address, err)
+		return fmt.Errorf("invalid Vault address %q [err=%w]", c.cfg.Address, err)
 	}
 
 	return nil
@@ -101,7 +102,7 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 	}()
 
 	if c.cfg.Auth == nil {
-		err = fmt.Errorf("vault authentication credentials missing")
+		err = errors.New("vault authentication credentials missing")
 		return err
 	}
 
@@ -122,7 +123,7 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 		ghSecAuth, ghErr := c.GithubLogin(ctx)
 		if ghErr != nil {
 			logger.WithError(ghErr).Errorf("authentication failed")
-			return fmt.Errorf("GitHub authentication failed %v", ghErr)
+			return fmt.Errorf("GitHub authentication failed: %w", ghErr)
 		}
 
 		logger.Infof("authentication succeeded")
@@ -133,7 +134,7 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 		return nil
 	}
 
-	err = fmt.Errorf("vault authentication credentials missing")
+	err = errors.New("vault authentication credentials missing")
 
 	return err
 }
@@ -173,7 +174,7 @@ func (c *KVv2Client) GithubLogin(ctx context.Context) (*api.SecretAuth, error) {
 	}
 
 	if secret == nil {
-		return nil, fmt.Errorf("empty response")
+		return nil, errors.New("empty response")
 	}
 
 	return secret.Auth, nil
@@ -204,7 +205,7 @@ func (c *KVv2Client) HealthCheck(ctx context.Context) error {
 	}
 
 	if !resp.Initialized {
-		return fmt.Errorf("hashicorp client is not initialized")
+		return errors.New("hashicorp client is not initialized")
 	}
 
 	return nil
@@ -267,12 +268,12 @@ func (c *KVv2Client) List(ctx context.Context, pth string) ([]string, error) {
 
 func extractListData(secret *api.Secret) ([]string, error) {
 	if secret == nil || secret.Data == nil {
-		return nil, fmt.Errorf("empty response")
+		return nil, errors.New("empty response")
 	}
 
 	keys, ok := secret.Data["keys"]
 	if !ok {
-		return nil, fmt.Errorf("invalid response body missing \"keys\" field")
+		return nil, errors.New("invalid response body missing \"keys\" field")
 	}
 
 	ikeys, ok := keys.([]interface{})
@@ -289,7 +290,7 @@ func extractListData(secret *api.Secret) ([]string, error) {
 }
 
 func (c *KVv2Client) Delete(context.Context, string) error {
-	return fmt.Errorf("not implemented error")
+	return errors.New("not implemented error")
 }
 
 func (c *KVv2Client) dataPath(id string) string {
@@ -331,7 +332,7 @@ func (c *KVv2Client) kvPreflightVersionRequest(ctx context.Context, pth string) 
 		return "", 0, err
 	}
 	if secret == nil {
-		return "", 0, fmt.Errorf("nil response from pre-flight request")
+		return "", 0, errors.New("nil response from pre-flight request")
 	}
 
 	if mountPathRaw, ok := secret.Data["path"]; ok {

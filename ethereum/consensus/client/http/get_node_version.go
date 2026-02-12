@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -18,7 +19,7 @@ func (c *Client) getNodeVersion(ctx context.Context) (string, error) {
 		return "", autorest.NewErrorWithError(err, "eth2http.Client", "GetNodeVersion", nil, "Failure preparing request")
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:bodyclose // response body is closed by inspect*Response via autorest.ByClosing
 	if err != nil {
 		return "", autorest.NewErrorWithError(err, "eth2http.Client", "GetNodeVersion", resp, "Failure sending request")
 	}

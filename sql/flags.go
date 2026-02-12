@@ -5,7 +5,7 @@ import (
 	"time"
 
 	cmdutils "github.com/kilnfi/go-utils/cmd/utils"
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -69,7 +69,7 @@ func (fl *FlagPrefixer) ConfigFromViper(v *viper.Viper) *Config {
 		SSLCert:        fl.tlsFlag.GetCert(v),
 		SSLKey:         fl.tlsFlag.GetKey(v),
 		SSLCA:          fl.tlsFlag.GetCA(v),
-		ConnectTimeout: &types.Duration{Duration: fl.GetConnectTimeout(v)},
+		ConnectTimeout: &common.Duration{Duration: fl.GetConnectTimeout(v)},
 	}
 }
 
@@ -160,7 +160,7 @@ func (fl *FlagPrefixer) PortFlag(v *viper.Viper, f *pflag.FlagSet) {
 }
 
 func (fl *FlagPrefixer) GetPort(v *viper.Viper) uint16 {
-	return uint16(v.GetUint32(fl.ViperKey(portViperKey)))
+	return uint16(v.GetUint32(fl.ViperKey(portViperKey))) //nolint:gosec // validated port range is constrained by configuration defaults
 }
 
 const (

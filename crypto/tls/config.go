@@ -74,26 +74,26 @@ var (
 
 // TLSClientConfig configures TLS for an entry point
 type Config struct {
-	Certificates []Certificate `json:"certificates,omitempty" toml:"certificates,omitempty" yaml:"certificates,omitempty" export:"true"`
-	CAs          []Certificate `json:"clientCAs,omitempty" toml:"clientCAs,omitempty" yaml:"clientCAs,omitempty"`
+	Certificates []Certificate `export:"true"              json:"certificates,omitempty" toml:"certificates,omitempty" yaml:"certificates,omitempty"`
+	CAs          []Certificate `json:"clientCAs,omitempty" toml:"clientCAs,omitempty"    yaml:"clientCAs,omitempty"`
 
-	NextProtos []string `json:"nextProtos,omitempty" toml:"nextProtos,omitempty" yaml:"nextProtos,omitempty" export:"true"`
+	NextProtos []string `export:"true" json:"nextProtos,omitempty" toml:"nextProtos,omitempty" yaml:"nextProtos,omitempty"`
 
-	CipherSuites     []string `json:"cipherSuites,omitempty" toml:"cipherSuites,omitempty" yaml:"cipherSuites,omitempty"`
+	CipherSuites     []string `json:"cipherSuites,omitempty"     toml:"cipherSuites,omitempty"     yaml:"cipherSuites,omitempty"`
 	CurvePreferences []string `json:"curvePreferences,omitempty" toml:"curvePreferences,omitempty" yaml:"curvePreferences,omitempty"`
 
 	ClientAuth string `json:"clientAuthType,omitempty" toml:"clientAuthType,omitempty" yaml:"clientAuthType,omitempty"`
 
-	MinVersion string `json:"minVersion,omitempty" toml:"minVersion,omitempty" yaml:"minVersion,omitempty" export:"true"`
-	MaxVersion string `json:"maxVersion,omitempty" toml:"maxVersion,omitempty" yaml:"maxVersion,omitempty" export:"true"`
+	MinVersion string `export:"true" json:"minVersion,omitempty" toml:"minVersion,omitempty" yaml:"minVersion,omitempty"`
+	MaxVersion string `export:"true" json:"maxVersion,omitempty" toml:"maxVersion,omitempty" yaml:"maxVersion,omitempty"`
 
-	ServerName string `json:"serverName,omitempty" toml:"serverName,omitempty" yaml:"serverName,omitempty" export:"true"`
+	ServerName string `export:"true" json:"serverName,omitempty" toml:"serverName,omitempty" yaml:"serverName,omitempty"`
 
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty" toml:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
 
-	PreferServerCipherSuites bool `json:"preferServerCipherSuites,omitempty" toml:"preferServerCipherSuites,omitempty" yaml:"preferServerCipherSuites,omitempty" export:"true"`
+	PreferServerCipherSuites bool `export:"true" json:"preferServerCipherSuites,omitempty" toml:"preferServerCipherSuites,omitempty" yaml:"preferServerCipherSuites,omitempty"`
 
-	SniStrict bool `json:"sniStrict,omitempty" toml:"sniStrict,omitempty" yaml:"sniStrict,omitempty" export:"true"`
+	SniStrict bool `export:"true" json:"sniStrict,omitempty" toml:"sniStrict,omitempty" yaml:"sniStrict,omitempty"`
 }
 
 func (opt *Config) TLSClientAuth() (tls.ClientAuthType, error) {
@@ -121,7 +121,7 @@ func (opt *Config) ToTLSConfig() (*tls.Config, error) {
 	cfg := &tls.Config{
 		ServerName:               opt.ServerName,
 		NextProtos:               opt.NextProtos,
-		PreferServerCipherSuites: opt.PreferServerCipherSuites,
+		PreferServerCipherSuites: opt.PreferServerCipherSuites, //nolint:gosec // field is configurable for compatibility with legacy deployments
 		InsecureSkipVerify:       opt.InsecureSkipVerify,
 	}
 

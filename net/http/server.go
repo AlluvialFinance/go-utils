@@ -2,13 +2,13 @@ package http
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net"
 	"net/http"
 	"sync"
 	"time"
 
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	kilnnet "github.com/kilnfi/go-utils/net"
 	"github.com/sirupsen/logrus"
 )
@@ -33,12 +33,12 @@ func (c ConnStateCallbackTypeWrapper) MarshalJSON() ([]byte, error) {
 type ServerConfig struct {
 	Entrypoint *kilnnet.EntrypointConfig
 
-	ReadTimeout       *types.Duration
-	ReadHeaderTimeout *types.Duration
+	ReadTimeout       *common.Duration
+	ReadHeaderTimeout *common.Duration
 
-	WriteTimeout *types.Duration
+	WriteTimeout *common.Duration
 
-	IdleTimeout *types.Duration
+	IdleTimeout *common.Duration
 
 	MaxHeaderBytes *int
 
@@ -52,19 +52,19 @@ func (cfg *ServerConfig) SetDefault() *ServerConfig {
 	cfg.Entrypoint.SetDefault()
 
 	if cfg.ReadTimeout == nil {
-		cfg.ReadTimeout = &types.Duration{Duration: 30 * time.Second}
+		cfg.ReadTimeout = &common.Duration{Duration: 30 * time.Second}
 	}
 
 	if cfg.ReadHeaderTimeout == nil {
-		cfg.ReadHeaderTimeout = &types.Duration{Duration: 30 * time.Second}
+		cfg.ReadHeaderTimeout = &common.Duration{Duration: 30 * time.Second}
 	}
 
 	if cfg.WriteTimeout == nil {
-		cfg.WriteTimeout = &types.Duration{Duration: 90 * time.Second}
+		cfg.WriteTimeout = &common.Duration{Duration: 90 * time.Second}
 	}
 
 	if cfg.IdleTimeout == nil {
-		cfg.IdleTimeout = &types.Duration{Duration: 90 * time.Second}
+		cfg.IdleTimeout = &common.Duration{Duration: 90 * time.Second}
 	}
 
 	return cfg
@@ -143,7 +143,7 @@ func (s *Server) start(ctx context.Context) {
 	defer s.mux.Unlock()
 
 	if s.status == statusStopped {
-		s.startErr = fmt.Errorf("server already stopped")
+		s.startErr = errors.New("server already stopped")
 		return
 	}
 
@@ -163,7 +163,7 @@ func (s *Server) start(ctx context.Context) {
 	go func() {
 		s.srvErr = s.server.Serve(l)
 		close(s.done)
-		if s.srvErr != nil && s.srvErr != http.ErrServerClosed {
+		if s.srvErr != nil && !errors.Is(s.srvErr, http.ErrServerClosed) {
 			s.Logger().WithError(s.srvErr).Infof("error while serving HTTP request")
 		} else {
 			s.Logger().Infof("stopped serving HTTP request")
@@ -196,7 +196,7 @@ func (s *Server) stop(ctx context.Context) {
 		<-s.done
 
 		// Return possible error from Serve(...)
-		if err == nil && s.srvErr != nil && s.srvErr != http.ErrServerClosed {
+		if err == nil && s.srvErr != nil && !errors.Is(s.srvErr, http.ErrServerClosed) {
 			err = s.srvErr
 		}
 
