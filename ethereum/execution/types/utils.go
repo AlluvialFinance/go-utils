@@ -23,6 +23,10 @@ func FromBlockNumArg(s string) (*big.Int, error) {
 	switch s {
 	case pending:
 		return big.NewInt(-1), nil
+	case finalized:
+		return big.NewInt(int64(rpc.FinalizedBlockNumber)), nil
+	case safe:
+		return big.NewInt(int64(rpc.SafeBlockNumber)), nil
 	case latest:
 		return nil, nil //nolint:nilnil // nil means latest block number by API contract
 	default:

@@ -166,7 +166,7 @@ func decodePEM(raw []byte, typ string) ([][]byte, error) {
 
 	if len(blocks) == 0 {
 		if len(skippedBlockTypes) == 0 {
-			return nil, errors.New("failed to find any  data in input")
+			return nil, errors.New("failed to find any data in input")
 		}
 		return nil, fmt.Errorf("failed to find %q  block in input after skipping blocks of the following types: %v", typ, skippedBlockTypes)
 	}

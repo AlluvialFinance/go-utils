@@ -2,9 +2,9 @@
 package httptestutils
 
 import (
-	http "net/http"
+	"net/http"
 
-	gomock "github.com/golang/mock/gomock"
+	"github.com/golang/mock/gomock"
 	"gopkg.in/h2non/gock.v1"
 )
 

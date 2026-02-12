@@ -9,7 +9,7 @@ import (
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
-	keystore "github.com/kilnfi/go-utils/keystore"
+	"github.com/kilnfi/go-utils/keystore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

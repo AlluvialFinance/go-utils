@@ -152,7 +152,7 @@ func (app *App) registerBaseMetrics() {
 
 func (app *App) livecheck(context.Context) error {
 	if app.isStatus(statusInitErr) {
-		return errors.New("app initilalization failed")
+		return errors.New("app initialization failed")
 	}
 
 	if app.isStatus(statusStopped) {

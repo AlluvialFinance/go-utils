@@ -2,7 +2,6 @@
 package gethkeystore
 
 import (
-	"os"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -70,8 +69,6 @@ func TestKeystoreEnvVars(t *testing.T) {
 	// Set environment variables
 	t.Setenv("KEYSTORE_PATH", "/env/keystore")
 	t.Setenv("KEYSTORE_PASSWORD", "envpassword")
-	defer os.Unsetenv("KEYSTORE_PATH")
-	defer os.Unsetenv("KEYSTORE_PASSWORD")
 
 	v := viper.New()
 	f := pflag.NewFlagSet("test", pflag.ContinueOnError)

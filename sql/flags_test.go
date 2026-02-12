@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFlags(t *testing.T) {
@@ -28,7 +29,8 @@ func TestFlags(t *testing.T) {
 	t.Setenv("TEST_DB_SSLKEY", "./key.pem")
 	t.Setenv("TEST_DB_CONNECT_TIMEOUT", "120s")
 
-	cfg := fl.ConfigFromViper(v)
+	cfg, err := fl.ConfigFromViper(v)
+	require.NoError(t, err)
 	assert.Equal(
 		t,
 		&Config{
@@ -46,4 +48,17 @@ func TestFlags(t *testing.T) {
 		},
 		cfg,
 	)
+}
+
+func TestConfigFromViperPortOutOfRange(t *testing.T) {
+	fl := NewFlagPrefixer("postgres", "Test")
+	v := viper.New()
+	fl.Flags(v, pflag.NewFlagSet("test", pflag.ContinueOnError))
+	t.Setenv("TEST_DB_PORT", "70000")
+
+	cfg, err := fl.ConfigFromViper(v)
+	require.Error(t, err)
+	assert.Nil(t, cfg)
+	assert.Contains(t, err.Error(), "test.db.port")
+	assert.Contains(t, err.Error(), "70000")
 }
