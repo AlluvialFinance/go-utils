@@ -14,12 +14,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/hellofresh/health-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/tracing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -499,6 +499,7 @@ func (app *App) setHandler() {
 
 func (app *App) instrumentMiddleware() alice.Chain {
 	return alice.New(
+		tracing.Middleware,
 		app.loggerMiddleware,
 		app.requestMetricsMiddleware,
 	)
@@ -509,7 +510,97 @@ func (app *App) loggerMiddleware(h http.Handler) http.Handler {
 	if app.cfg.Logger.Format == "json" {
 		return app.jsonLoggingHandler(h)
 	}
-	return handlers.CombinedLoggingHandler(app.logger.Out, h)
+	return app.combinedLoggingHandlerWithTraceID(h)
+}
+
+// combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
+// with an additional trace_id field appended.
+// combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
+// with trace_id and optional memory stats appended.
+func (app *App) combinedLoggingHandlerWithTraceID(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Capture memory stats before the request if enabled
+		var memBefore runtime.MemStats
+		if app.cfg.LogMemoryUsage {
+			runtime.ReadMemStats(&memBefore)
+		}
+
+		// Wrap the response writer to capture status code and bytes written
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Call the next handler
+		h.ServeHTTP(wrapped, r)
+
+		// Write the log entry
+		app.writeApacheCombinedLog(wrapped, r, start, &memBefore)
+	})
+}
+
+// writeApacheCombinedLog writes a log entry in Apache Combined Log Format with trace ID, optional parent_trace_id, and optional memory stats.
+// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s [parent_trace_id=%s] [mem_stats...]
+func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request, start time.Time, memBefore *runtime.MemStats) {
+	traceID := tracing.GetTraceIDFromRequest(r)
+	parentTraceID := tracing.GetParentTraceIDFromRequest(r)
+
+	// Get username from request (basic auth)
+	username := "-"
+	if r.URL.User != nil {
+		if name := r.URL.User.Username(); name != "" {
+			username = name
+		}
+	}
+
+	// Get referer and user agent, defaulting to "-" if empty
+	referer := r.Referer()
+	if referer == "" {
+		referer = "-"
+	}
+	userAgent := r.UserAgent()
+	if userAgent == "" {
+		userAgent = "-"
+	}
+
+	// Get request host (client IP)
+	host := r.RemoteAddr
+
+	// Get request URI
+	uri := r.RequestURI
+	if uri == "" {
+		uri = r.URL.RequestURI()
+	}
+
+	// Calculate duration
+	durationMs := time.Since(start).Milliseconds()
+
+	fields := logrus.Fields{
+		"host":          host,
+		"username":      username,
+		"start_time":    start.Format("02/Jan/2006:15:04:05 -0700"),
+		"method":        r.Method,
+		"uri":           uri,
+		"proto":         r.Proto,
+		"status_code":   wrapped.statusCode,
+		"bytes_written": wrapped.bytesWritten,
+		"referer":       referer,
+		"user_agent":    userAgent,
+		"trace_id":      traceID,
+		"duration_ms":   durationMs,
+	}
+	if parentTraceID != "" {
+		fields["parent_trace_id"] = parentTraceID
+	}
+	if app.cfg.LogMemoryUsage {
+		var memAfter runtime.MemStats
+		runtime.ReadMemStats(&memAfter)
+		fields["mem_before_alloc_mb"] = bToMb(memBefore.Alloc)
+		fields["mem_after_alloc_mb"] = bToMb(memAfter.Alloc)
+		fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
+		fields["mem_after_heap_inuse_mb"] = bToMb(memAfter.HeapInuse)
+		fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
+	}
+	app.logger.WithFields(fields).Info()
 }
 
 func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
@@ -538,6 +629,14 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			"bytes":       wrapped.bytesWritten,
 			"duration_ms": time.Since(start).Milliseconds(),
 			"protocol":    r.Proto,
+		}
+
+		// Add trace ID and parent trace ID if present in context
+		if traceID := tracing.GetTraceIDFromRequest(r); traceID != "" {
+			fields[tracing.FieldTraceID] = traceID
+		}
+		if parentTraceID := tracing.GetParentTraceIDFromRequest(r); parentTraceID != "" {
+			fields[tracing.FieldParentTraceID] = parentTraceID
 		}
 
 		// Capture memory stats after the request and calculate deltas

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"net/http"
 	"sync"
 
 	"github.com/ethereum/go-ethereum"
@@ -11,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/kilnfi/go-utils/ethereum/execution/client"
+	"github.com/kilnfi/go-utils/tracing"
 )
 
 // Ensure Client interface is fully implemented
@@ -33,14 +35,24 @@ func NewClient(address string) *Client {
 	}
 }
 
-func (c *Client) Init(context.Context) error {
-	rpcClient, err := rpc.Dial(c.address)
+func (c *Client) Init(ctx context.Context) error {
+	rpcClient, err := rpc.DialOptions(ctx, c.address)
 	if err != nil {
 		return fmt.Errorf("failed to connect execution layer: %w", err)
 	}
 	c.rpcclient = rpcClient
 	c.Client = ethclient.NewClient(rpcClient)
 	return nil
+}
+
+// PrepareContextForOutbound adds the trace ID from ctx (if any) as X-Trace-ID so the next RPC request
+// sends it to the server (e.g. eth-proxy), allowing logs to be correlated.
+func (c *Client) PrepareContextForOutbound(ctx context.Context) context.Context {
+	traceID := tracing.GetTraceID(ctx)
+	if traceID == "" {
+		return ctx
+	}
+	return rpc.NewContextWithHeaders(ctx, http.Header{tracing.HeaderTraceID: []string{traceID}})
 }
 
 func (c *Client) ChainID(ctx context.Context) (*big.Int, error) {

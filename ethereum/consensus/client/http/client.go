@@ -10,6 +10,7 @@ import (
 
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
+	"github.com/kilnfi/go-utils/tracing"
 )
 
 var silentLog = &logrus.Logger{
@@ -64,6 +65,9 @@ func (c *Client) SetLogger(logger logrus.FieldLogger) {
 
 func newRequest(ctx context.Context) *http.Request {
 	req, _ := http.NewRequestWithContext(ctx, "", "", http.NoBody)
+	if traceID := tracing.GetTraceID(ctx); traceID != "" {
+		req.Header.Set(tracing.HeaderTraceID, traceID)
+	}
 	return req
 }
 

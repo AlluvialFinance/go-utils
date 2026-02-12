@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/http"
 	"sync"
 
 	geth "github.com/ethereum/go-ethereum"
@@ -20,6 +21,7 @@ import (
 	"github.com/kilnfi/go-utils/ethereum/execution/types"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
 	jsonrpchttp "github.com/kilnfi/go-utils/net/jsonrpc/http"
+	"github.com/kilnfi/go-utils/tracing"
 )
 
 // Ensure Client interface is fully implemented
@@ -61,6 +63,16 @@ func (c *Client) SetLogger(logger logrus.FieldLogger) {
 	if loggable, ok := c.client.(interfaces.Loggable); ok {
 		loggable.SetLogger(logger)
 	}
+}
+
+// PrepareContextForOutbound adds the trace ID from ctx (if any) as outbound headers so the next
+// RPC request sends it (e.g. to eth-proxy), allowing logs to be correlated. Same approach as the geth client.
+func (c *Client) PrepareContextForOutbound(ctx context.Context) context.Context {
+	traceID := tracing.GetTraceID(ctx)
+	if traceID == "" {
+		return ctx
+	}
+	return tracing.WithOutboundHeaders(ctx, http.Header{tracing.HeaderTraceID: []string{traceID}})
 }
 
 func (c *Client) call(ctx context.Context, res interface{}, method string, params ...interface{}) error {
