@@ -35,6 +35,6 @@ func HasVersion(v string) gomock.Matcher {
 func HasID(id interface{}) gomock.Matcher {
 	return &matcher{
 		match: func(req *jsonrpc.Request) bool { return req.ID == id },
-		msg:   fmt.Sprintf("Request should have version %v", id),
+		msg:   fmt.Sprintf("Request should have ID %v", id),
 	}
 }

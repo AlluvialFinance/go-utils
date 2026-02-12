@@ -94,6 +94,7 @@ func NewPostgresServiceConfig(opts *PostgresServiceOpts) (*ServiceConfig, error)
 		if err != nil {
 			return err
 		}
+		defer db.Close()
 
 		return db.PingContext(ctx)
 	}

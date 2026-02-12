@@ -87,7 +87,7 @@ func (cfg *ClientConfig) ToHashicorpConfig() (*api.Config, error) {
 	}
 
 	config.MinRetryWait = cfg.MinRetryWait.Duration
-	config.MinRetryWait = cfg.MinRetryWait.Duration
+	config.MaxRetryWait = cfg.MaxRetryWait.Duration
 	config.MaxRetries = *cfg.MaxRetries
 
 	// Ensure redirects are not automatically followed
