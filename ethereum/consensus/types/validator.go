@@ -10,20 +10,20 @@ import (
 )
 
 type Validator struct {
-	Index     beaconcommon.ValidatorIndex `json:"index" yaml:"index"`
-	Status    string                      `json:"status" yaml:"status"`
-	Balance   beaconcommon.Gwei           `json:"balance" yaml:"balance"`
+	Index     beaconcommon.ValidatorIndex `json:"index"     yaml:"index"`
+	Status    string                      `json:"status"    yaml:"status"`
+	Balance   beaconcommon.Gwei           `json:"balance"   yaml:"balance"`
 	Validator *beaconphase0.Validator     `json:"validator" yaml:"validator"`
 }
 
 type ValidatorBalance struct {
-	Index   beaconcommon.ValidatorIndex `json:"index" yaml:"index"`
+	Index   beaconcommon.ValidatorIndex `json:"index"   yaml:"index"`
 	Balance beaconcommon.Gwei           `json:"balance" yaml:"balance"`
 }
 
 func (val Validator) MarshalCSV() ([]string, error) {
 	record := []string{
-		strconv.FormatInt(int64(val.Index), 10),
+		strconv.FormatUint(uint64(val.Index), 10),
 		val.Status,
 		val.Balance.String(),
 	}

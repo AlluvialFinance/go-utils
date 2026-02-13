@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package jsonrpchttp
 
 import (
@@ -7,12 +8,11 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/sirupsen/logrus"
-
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
 	"github.com/kilnfi/go-utils/tracing"
+	"github.com/sirupsen/logrus"
 )
 
 // Client allows to connect to a JSON-RPC server
@@ -78,6 +78,9 @@ func (c *Client) call(ctx context.Context, r *jsonrpc.Request, res interface{}) 
 	}
 
 	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		msg, _ := json.Marshal(r)
 		return autorest.NewErrorWithError(err, "jsonrpchttp.Client", fmt.Sprintf("Call(%v)", string(msg)), resp, "Do")
@@ -142,13 +145,12 @@ func inspectCallResponseMsg(msg *responseMsg, res interface{}) error {
 	if msg.Result != nil && res != nil {
 		err := json.Unmarshal(*msg.Result, res)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal JSON-RPC result %v into %T (%v)", string(*msg.Result), res, err)
+			return fmt.Errorf("failed to unmarshal JSON-RPC result %v into %T (%w)", string(*msg.Result), res, err)
 		}
 		return nil
 	}
 
 	return nil
-
 }
 
 func inspectCallResponse(resp *http.Response, res interface{}) error {

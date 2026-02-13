@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 )
 
 type Config struct {
@@ -18,11 +18,11 @@ type Config struct {
 
 	SSLMode, SSLCert, SSLKey, SSLCA string
 
-	ConnectTimeout *types.Duration
+	ConnectTimeout *common.Duration
 
 	PoolSize int
 
-	KeepAlive *types.Duration
+	KeepAlive *common.Duration
 
 	GormLoggerOff bool
 }
@@ -59,11 +59,11 @@ func (cfg *Config) SetDefault() *Config {
 	}
 
 	if cfg.ConnectTimeout == nil {
-		cfg.ConnectTimeout = &types.Duration{Duration: 30 * time.Second}
+		cfg.ConnectTimeout = &common.Duration{Duration: 30 * time.Second}
 	}
 
 	if cfg.KeepAlive == nil {
-		cfg.KeepAlive = &types.Duration{Duration: time.Minute}
+		cfg.KeepAlive = &common.Duration{Duration: time.Minute}
 	}
 
 	return cfg

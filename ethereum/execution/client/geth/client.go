@@ -2,6 +2,7 @@ package geth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -81,8 +82,8 @@ func (c *Client) FilterLogs(ctx context.Context, query ethereum.FilterQuery) ([]
 		ErrorData() interface{}
 	}
 
-	jsonErr, ok := err.(jsonError)
-	if !ok {
+	var jsonErr jsonError
+	if !errors.As(err, &jsonErr) {
 		return logs, err
 	}
 

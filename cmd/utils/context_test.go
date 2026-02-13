@@ -1,10 +1,8 @@
 //go:build !integration
-// +build !integration
 
 package utils
 
 import (
-	"context"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -12,10 +10,10 @@ import (
 )
 
 func TestContext(t *testing.T) {
-	assert.Equal(t, viper.GetViper(), ViperFromContext(context.TODO()))
+	assert.Equal(t, viper.GetViper(), ViperFromContext(t.Context()))
 
 	newV := viper.New()
-	ctx := WithViper(context.Background(), newV)
+	ctx := WithViper(t.Context(), newV)
 
 	newV.Set("test", "test")
 	assert.Equal(t, newV, ViperFromContext(ctx))

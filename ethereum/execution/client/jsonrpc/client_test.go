@@ -1,10 +1,8 @@
 //go:build !integration
-// +build !integration
 
 package jsonrpc
 
 import (
-	"context"
 	"embed"
 	"math/big"
 	"testing"
@@ -15,17 +13,14 @@ import (
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	jsonrpchttp "github.com/kilnfi/go-utils/net/jsonrpc/http"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var (
-	//go:embed testdata
-	testdataFS embed.FS
-)
+//go:embed testdata
+var testdataFS embed.FS
 
 func TestClientImplementsGetBindingInterface(t *testing.T) {
 	client := new(Client)
@@ -56,6 +51,7 @@ func TestClient(t *testing.T) {
 }
 
 func testBlockNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_blockNumber","params":null,"id":null}`)).
@@ -64,13 +60,14 @@ func testBlockNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSender)
 
 	mockCli.EXPECT().Gock(req)
 
-	blockNumber, err := c.BlockNumber(context.Background())
+	blockNumber, err := c.BlockNumber(t.Context())
 
 	require.NoError(t, err)
 	assert.Equal(t, uint64(32), blockNumber)
 }
 
 func testBlockByNumberFinalized(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	res, _ := testdataFS.ReadFile("testdata/eth_getBlockByNumber_finalized_true.json")
 	require.NotEmpty(t, res, "response should not be empty (check typo in testdata filename)")
 
@@ -82,7 +79,7 @@ func testBlockByNumberFinalized(t *testing.T, c *Client, mockCli *httptestutils.
 
 	mockCli.EXPECT().Gock(req)
 
-	block, err := c.BlockByNumber(context.Background(), big.NewInt(int64(rpc.FinalizedBlockNumber)))
+	block, err := c.BlockByNumber(t.Context(), big.NewInt(int64(rpc.FinalizedBlockNumber)))
 
 	require.NoError(t, err)
 	assert.Equal(
@@ -111,6 +108,7 @@ func testBlockByNumberFinalized(t *testing.T, c *Client, mockCli *httptestutils.
 }
 
 func testBlockByNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	res, _ := testdataFS.ReadFile("testdata/eth_getBlockByNumber_0xd6e166_true.json")
 	require.NotEmpty(t, res, "response should not be empty (check typo in testdata filename)")
 
@@ -122,7 +120,7 @@ func testBlockByNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSende
 
 	mockCli.EXPECT().Gock(req)
 
-	block, err := c.BlockByNumber(context.Background(), big.NewInt(14082406))
+	block, err := c.BlockByNumber(t.Context(), big.NewInt(14082406))
 
 	require.NoError(t, err)
 	assert.Equal(
@@ -151,6 +149,7 @@ func testBlockByNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSende
 }
 
 func testBlockByHash(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	res, _ := testdataFS.ReadFile("testdata/eth_getBlockByHash_0x0fb6d5609c9edab75bf587ea7449e6e6940d6e3df1992a1bd96ca8b74ffd16fc_true.json")
 	require.NotEmpty(t, res, "response should not be empty (check typo in testdata filename)")
 
@@ -162,7 +161,7 @@ func testBlockByHash(t *testing.T, c *Client, mockCli *httptestutils.MockSender)
 
 	mockCli.EXPECT().Gock(req)
 
-	block, err := c.BlockByHash(context.Background(), gethcommon.HexToHash("0x0fb6d5609c9edab75bf587ea7449e6e6940d6e3df1992a1bd96ca8b74ffd16fc"))
+	block, err := c.BlockByHash(t.Context(), gethcommon.HexToHash("0x0fb6d5609c9edab75bf587ea7449e6e6940d6e3df1992a1bd96ca8b74ffd16fc"))
 
 	require.NoError(t, err)
 	assert.Equal(
@@ -191,6 +190,7 @@ func testBlockByHash(t *testing.T, c *Client, mockCli *httptestutils.MockSender)
 }
 
 func testHeaderByNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_getBlockByNumber","params":["0xd6e166",false],"id":null}`)).
@@ -199,7 +199,7 @@ func testHeaderByNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSend
 
 	mockCli.EXPECT().Gock(req)
 
-	header, err := c.HeaderByNumber(context.Background(), big.NewInt(14082406))
+	header, err := c.HeaderByNumber(t.Context(), big.NewInt(14082406))
 
 	require.NoError(t, err)
 	assert.Equal(
@@ -227,6 +227,7 @@ func testHeaderByNumber(t *testing.T, c *Client, mockCli *httptestutils.MockSend
 }
 
 func testCallContract(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_call","params":[{"data":"0x0123456789","from":"0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5","to":null},"0xd6e166"],"id":null}`)).
@@ -236,7 +237,7 @@ func testCallContract(t *testing.T, c *Client, mockCli *httptestutils.MockSender
 	mockCli.EXPECT().Gock(req)
 
 	res, err := c.CallContract(
-		context.Background(),
+		t.Context(),
 		geth.CallMsg{
 			From: gethcommon.HexToAddress("0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5"),
 			Data: gethcommon.FromHex("0x0123456789"),
@@ -249,6 +250,7 @@ func testCallContract(t *testing.T, c *Client, mockCli *httptestutils.MockSender
 }
 
 func testNonceAt(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_getTransactionCount","params":["0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5","0xd6e6f3"],"id":null}`)).
@@ -258,7 +260,7 @@ func testNonceAt(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
 	mockCli.EXPECT().Gock(req)
 
 	nonce, err := c.NonceAt(
-		context.Background(),
+		t.Context(),
 		gethcommon.HexToAddress("0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5"),
 		big.NewInt(14083827),
 	)
@@ -268,6 +270,7 @@ func testNonceAt(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
 }
 
 func testPendingNonceAt(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_getTransactionCount","params":["0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5","pending"],"id":null}`)).
@@ -277,7 +280,7 @@ func testPendingNonceAt(t *testing.T, c *Client, mockCli *httptestutils.MockSend
 	mockCli.EXPECT().Gock(req)
 
 	nonce, err := c.PendingNonceAt(
-		context.Background(),
+		t.Context(),
 		gethcommon.HexToAddress("0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5"),
 	)
 
@@ -286,6 +289,7 @@ func testPendingNonceAt(t *testing.T, c *Client, mockCli *httptestutils.MockSend
 }
 
 func testSuggestGasPrice(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_gasPrice","params":null,"id":null}`)).
@@ -294,13 +298,14 @@ func testSuggestGasPrice(t *testing.T, c *Client, mockCli *httptestutils.MockSen
 
 	mockCli.EXPECT().Gock(req)
 
-	p, err := c.SuggestGasPrice(context.Background())
+	p, err := c.SuggestGasPrice(t.Context())
 
 	require.NoError(t, err)
 	assert.Equal(t, big.NewInt(205014543003), p)
 }
 
 func testSuggestGasTipCap(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_maxPriorityFeePerGas","params":null,"id":null}`)).
@@ -309,13 +314,14 @@ func testSuggestGasTipCap(t *testing.T, c *Client, mockCli *httptestutils.MockSe
 
 	mockCli.EXPECT().Gock(req)
 
-	p, err := c.SuggestGasTipCap(context.Background())
+	p, err := c.SuggestGasTipCap(t.Context())
 
 	require.NoError(t, err)
 	assert.Equal(t, big.NewInt(205014543003), p)
 }
 
 func testEstimateGas(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_estimateGas","params":[{"data":"0x0123456789","from":"0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5","to":null}],"id":null}`)).
@@ -325,7 +331,7 @@ func testEstimateGas(t *testing.T, c *Client, mockCli *httptestutils.MockSender)
 	mockCli.EXPECT().Gock(req)
 
 	gas, err := c.EstimateGas(
-		context.Background(),
+		t.Context(),
 		geth.CallMsg{
 			From: gethcommon.HexToAddress("0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5"),
 			Data: gethcommon.FromHex("0x0123456789"),
@@ -337,6 +343,7 @@ func testEstimateGas(t *testing.T, c *Client, mockCli *httptestutils.MockSender)
 }
 
 func testSendTransaction(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"","method":"eth_sendRawTransaction","params":["0xf86d8202b38477359400825208944592d8f8d7b001e72cb26a73e4fa1806a51ac79d880de0b6b3a7640000802ba0699ff162205967ccbabae13e07cdd4284258d46ec1051a70a51be51ec2bc69f3a04e6944d508244ea54a62ebf9a72683eeadacb73ad7c373ee542f1998147b220e"],"id":null}`)).
@@ -349,7 +356,7 @@ func testSendTransaction(t *testing.T, c *Client, mockCli *httptestutils.MockSen
 	_ = tx.UnmarshalBinary(gethcommon.FromHex("0xf86d8202b38477359400825208944592d8f8d7b001e72cb26a73e4fa1806a51ac79d880de0b6b3a7640000802ba0699ff162205967ccbabae13e07cdd4284258d46ec1051a70a51be51ec2bc69f3a04e6944d508244ea54a62ebf9a72683eeadacb73ad7c373ee542f1998147b220e"))
 
 	err := c.SendTransaction(
-		context.Background(),
+		t.Context(),
 		tx,
 	)
 

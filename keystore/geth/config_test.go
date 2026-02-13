@@ -1,7 +1,7 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package gethkeystore
 
 import (
-	"os"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -67,10 +67,8 @@ func TestConfigFromViper(t *testing.T) {
 
 func TestKeystoreEnvVars(t *testing.T) {
 	// Set environment variables
-	os.Setenv("KEYSTORE_PATH", "/env/keystore")
-	os.Setenv("KEYSTORE_PASSWORD", "envpassword")
-	defer os.Unsetenv("KEYSTORE_PATH")
-	defer os.Unsetenv("KEYSTORE_PASSWORD")
+	t.Setenv("KEYSTORE_PATH", "/env/keystore")
+	t.Setenv("KEYSTORE_PASSWORD", "envpassword")
 
 	v := viper.New()
 	f := pflag.NewFlagSet("test", pflag.ContinueOnError)

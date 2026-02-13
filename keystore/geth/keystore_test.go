@@ -1,16 +1,15 @@
 //go:build !integration
-// +build !integration
 
+//revive:disable-next-line:package-directory-mismatch
 package gethkeystore
 
 import (
-	"context"
 	"math/big"
 	"testing"
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
-	keystore "github.com/kilnfi/go-utils/keystore"
+	"github.com/kilnfi/go-utils/keystore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,10 +25,10 @@ func TestSignTx(t *testing.T) {
 		Password: "test-pwd",
 	})
 
-	acc, err := keys.CreateAccount(context.TODO())
+	acc, err := keys.CreateAccount(t.Context())
 	require.NoError(t, err)
 
-	ok, err := keys.HasAccount(context.TODO(), acc.Addr)
+	ok, err := keys.HasAccount(t.Context(), acc.Addr)
 	require.NoError(t, err)
 	assert.True(t, ok)
 
@@ -42,7 +41,7 @@ func TestSignTx(t *testing.T) {
 	require.Equal(t, s, big.NewInt(0))
 	require.Equal(t, big.NewInt(0), tx.ChainId())
 
-	tx, err = keys.SignTx(context.TODO(), acc.Addr, tx, big.NewInt(1))
+	tx, err = keys.SignTx(t.Context(), acc.Addr, tx, big.NewInt(1))
 	require.NoError(t, err)
 	_, r, s = tx.RawSignatureValues()
 
@@ -59,14 +58,14 @@ func TestSignTxMissingAddress(t *testing.T) {
 	})
 
 	addr := gethcommon.HexToAddress("0x027f72bc0ca063e40577d30d336d52fd7bcc7375")
-	ok, err := keys.HasAccount(context.TODO(), addr)
+	ok, err := keys.HasAccount(t.Context(), addr)
 	require.NoError(t, err)
 	assert.False(t, ok)
 
 	tx := gethtypes.NewTx(
 		&gethtypes.DynamicFeeTx{},
 	)
-	_, err = keys.SignTx(context.TODO(), addr, tx, big.NewInt(1))
+	_, err = keys.SignTx(t.Context(), addr, tx, big.NewInt(1))
 	require.Error(t, err)
 	assert.Equal(t, "no key for address \"0x027f72Bc0CA063E40577D30D336D52Fd7bCC7375\"", err.Error())
 }

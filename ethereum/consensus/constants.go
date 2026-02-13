@@ -1,3 +1,4 @@
+//revive:disable-next-line:package-directory-mismatch
 package ethcl
 
 import (

@@ -2,6 +2,7 @@ package hashicorp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -79,18 +80,19 @@ func (c *KVv2Client) validateAddress() (err error) {
 	}()
 
 	if c.cfg.Address == "" {
-		err = fmt.Errorf("missing Vault address")
+		err = errors.New("missing Vault address")
 		return err
 	}
 
 	// validate vault address
 	_, err = url.Parse(c.cfg.Address)
 	if err != nil {
-		return fmt.Errorf("invalid Vault address %q [err=%v]", c.cfg.Address, err)
+		return fmt.Errorf("invalid Vault address %q [err=%w]", c.cfg.Address, err)
 	}
 
 	return nil
 }
+
 func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 	c.logger.Info("authenticate on Vault")
 	defer func() {
@@ -100,8 +102,8 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 	}()
 
 	if c.cfg.Auth == nil {
-		err = fmt.Errorf("vault authentication credentials missing")
-		return
+		err = errors.New("vault authentication credentials missing")
+		return err
 	}
 
 	// Vault token has been provided
@@ -121,7 +123,7 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 		ghSecAuth, ghErr := c.GithubLogin(ctx)
 		if ghErr != nil {
 			logger.WithError(ghErr).Errorf("authentication failed")
-			return fmt.Errorf("GitHub authentication failed %v", ghErr)
+			return fmt.Errorf("GitHub authentication failed: %w", ghErr)
 		}
 
 		logger.Infof("authentication succeeded")
@@ -132,9 +134,9 @@ func (c *KVv2Client) initAuth(ctx context.Context) (err error) {
 		return nil
 	}
 
-	err = fmt.Errorf("vault authentication credentials missing")
+	err = errors.New("vault authentication credentials missing")
 
-	return
+	return err
 }
 
 func (c *KVv2Client) initKVv2(ctx context.Context) error {
@@ -167,13 +169,12 @@ func (c *KVv2Client) GithubLogin(ctx context.Context) (*api.SecretAuth, error) {
 			"token": strings.TrimSpace(c.cfg.Auth.GitHubToken),
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
 
 	if secret == nil {
-		return nil, fmt.Errorf("empty response")
+		return nil, errors.New("empty response")
 	}
 
 	return secret.Auth, nil
@@ -204,7 +205,7 @@ func (c *KVv2Client) HealthCheck(ctx context.Context) error {
 	}
 
 	if !resp.Initialized {
-		return fmt.Errorf("hashicorp client is not initialized")
+		return errors.New("hashicorp client is not initialized")
 	}
 
 	return nil
@@ -232,7 +233,7 @@ func (c *KVv2Client) Get(ctx context.Context, pth, version string) (secret *api.
 		query,
 	)
 	if err != nil {
-		return
+		return secret, data, metadata, err
 	}
 
 	if secret == nil || secret.Data["data"] == nil {
@@ -250,7 +251,7 @@ func (c *KVv2Client) Get(ctx context.Context, pth, version string) (secret *api.
 		return secret, nil, nil, fmt.Errorf("invalid hashicorp vault response metadata: %v", secret.Data["metadata"])
 	}
 
-	return
+	return secret, data, metadata, err
 }
 
 func (c *KVv2Client) List(ctx context.Context, pth string) ([]string, error) {
@@ -267,12 +268,12 @@ func (c *KVv2Client) List(ctx context.Context, pth string) ([]string, error) {
 
 func extractListData(secret *api.Secret) ([]string, error) {
 	if secret == nil || secret.Data == nil {
-		return nil, fmt.Errorf("empty response")
+		return nil, errors.New("empty response")
 	}
 
 	keys, ok := secret.Data["keys"]
 	if !ok {
-		return nil, fmt.Errorf("invalid response body missing \"keys\" field")
+		return nil, errors.New("invalid response body missing \"keys\" field")
 	}
 
 	ikeys, ok := keys.([]interface{})
@@ -289,7 +290,7 @@ func extractListData(secret *api.Secret) ([]string, error) {
 }
 
 func (c *KVv2Client) Delete(context.Context, string) error {
-	return fmt.Errorf("not implemented error")
+	return errors.New("not implemented error")
 }
 
 func (c *KVv2Client) dataPath(id string) string {
@@ -303,14 +304,14 @@ func (c *KVv2Client) metadaDataPath(id string) string {
 func (c *KVv2Client) kvPreflightVersionRequest(ctx context.Context, pth string) (mountPath string, version int, err error) {
 	// We don't want to use a wrapping call here so save any custom value and
 	// restore after
-	currentWrappingLookupFunc := c.Client.CurrentWrappingLookupFunc()
-	c.Client.SetWrappingLookupFunc(nil)
-	defer c.Client.SetWrappingLookupFunc(currentWrappingLookupFunc)
-	currentOutputCurlString := c.Client.OutputCurlString()
-	c.Client.SetOutputCurlString(false)
-	defer c.Client.SetOutputCurlString(currentOutputCurlString)
+	currentWrappingLookupFunc := c.CurrentWrappingLookupFunc()
+	c.SetWrappingLookupFunc(nil)
+	defer c.SetWrappingLookupFunc(currentWrappingLookupFunc)
+	currentOutputCurlString := c.OutputCurlString()
+	c.SetOutputCurlString(false)
+	defer c.SetOutputCurlString(currentOutputCurlString)
 
-	r := c.Client.NewRequest("GET", path.Join("/v1/sys/internal/ui/mounts", pth))
+	r := c.NewRequest("GET", path.Join("/v1/sys/internal/ui/mounts", pth))
 
 	resp, err := c.Client.RawRequestWithContext(ctx, r) //nolint
 	if resp != nil {
@@ -331,7 +332,7 @@ func (c *KVv2Client) kvPreflightVersionRequest(ctx context.Context, pth string) 
 		return "", 0, err
 	}
 	if secret == nil {
-		return "", 0, fmt.Errorf("nil response from pre-flight request")
+		return "", 0, errors.New("nil response from pre-flight request")
 	}
 
 	if mountPathRaw, ok := secret.Data["path"]; ok {

@@ -1,17 +1,15 @@
 //go:build !integration
-// +build !integration
 
+//revive:disable-next-line:package-directory-mismatch
 package eth2http
 
 import (
-	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 )
 
 func TestGetPendingPartialWithdrawals(t *testing.T) {
@@ -26,6 +24,7 @@ func TestGetPendingPartialWithdrawals(t *testing.T) {
 }
 
 func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Get("/eth/v1/beacon/states/head/pending_partial_withdrawals").
 		Reply(200).
@@ -41,7 +40,7 @@ func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *
 
 	mockCli.EXPECT().Gock(req)
 
-	withdrawals, err := c.GetPendingPartialWithdrawals(context.Background(), "head")
+	withdrawals, err := c.GetPendingPartialWithdrawals(t.Context(), "head")
 
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(withdrawals))
@@ -51,13 +50,14 @@ func testGetPendingPartialWithdrawalsStatusOK(t *testing.T, c *Client, mockCli *
 }
 
 func testGetPendingPartialWithdrawalsStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Get("/eth/v1/beacon/states/head/pending_partial_withdrawals").
 		Reply(400)
 
 	mockCli.EXPECT().Gock(req)
 
-	_, err := c.GetPendingPartialWithdrawals(context.Background(), "head")
+	_, err := c.GetPendingPartialWithdrawals(t.Context(), "head")
 
 	require.Error(t, err)
 }

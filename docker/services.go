@@ -9,9 +9,10 @@ import (
 
 	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
-	_ "github.com/jackc/pgx/v5/stdlib" // imported so pgx sql driver is registered
 	gethclient "github.com/kilnfi/go-utils/ethereum/execution/client/geth"
 	kilnsql "github.com/kilnfi/go-utils/sql"
+
+	_ "github.com/jackc/pgx/v5/stdlib" // imported so pgx sql driver is registered
 )
 
 type PostgresServiceOpts struct {
@@ -50,6 +51,9 @@ func (opts *PostgresServiceOpts) SQLConfig(container *dockercontainer.InspectRes
 	port, err := strconv.Atoi(portBindings[0].HostPort)
 	if err != nil {
 		return nil, err
+	}
+	if port < 0 || port > 65535 {
+		return nil, fmt.Errorf("port %d out of valid range", port)
 	}
 
 	return (&kilnsql.Config{
@@ -93,6 +97,7 @@ func NewPostgresServiceConfig(opts *PostgresServiceOpts) (*ServiceConfig, error)
 		if err != nil {
 			return err
 		}
+		defer db.Close()
 
 		return db.PingContext(ctx)
 	}
@@ -127,6 +132,7 @@ func (opts *TraefikServiceOpts) Addr(container *dockercontainer.InspectResponse)
 		return "", err
 	}
 
+	//revive:disable-next-line:unsecure-url-scheme
 	return fmt.Sprintf("http://%v:%v", portBindings[0].HostIP, portBindings[0].HostPort), nil
 }
 
@@ -179,6 +185,7 @@ func NewTreafikServiceConfig(opts *TraefikServiceOpts) (*ServiceConfig, error) {
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("invalid status: %v", resp.Status)

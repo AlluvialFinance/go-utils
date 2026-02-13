@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func PGXConnect(_ context.Context, cfg *Config) (*pgx.Conn, error) {
-	return pgx.Connect(context.TODO(), cfg.DSN().String())
+func PGXConnect(ctx context.Context, cfg *Config) (*pgx.Conn, error) {
+	return pgx.Connect(ctx, cfg.DSN().String())
 }
 
 func PingPGXConn(ctx context.Context, conn *pgx.Conn) error {

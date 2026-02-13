@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package gethkeystore
 
 import (
@@ -26,7 +27,6 @@ const (
 
 // KeystorePathFlag register flag for the path to the file keystore
 func KeystorePathFlag(v *viper.Viper, f *pflag.FlagSet) {
-
 	f.String(keyStorePathFlag, "", cmdutils.FlagDesc("Directory to store keys", keyStorePathEnv))
 
 	if err := v.BindPFlag(keyStorePathViperKey, f.Lookup(keyStorePathFlag)); err != nil {
@@ -49,7 +49,6 @@ const (
 
 // KeystorePasswordFlag register flag for the password used to encrypt keys in keystore
 func KeystorePasswordFlag(v *viper.Viper, f *pflag.FlagSet) {
-
 	f.String(keyStorePasswordFlag, "", cmdutils.FlagDesc("Password used to encrypt key files", keyStorePasswordEnv))
 
 	if err := v.BindPFlag(keyStorePasswordViperKey, f.Lookup(keyStorePasswordFlag)); err != nil {

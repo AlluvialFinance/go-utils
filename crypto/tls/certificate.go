@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	errKeyPairTypes = fmt.Errorf("private key type does not match public key type")
-	errKeyPair      = fmt.Errorf("private key does not match public key")
+	errKeyPairTypes = errors.New("private key type does not match public key type")
+	errKeyPair      = errors.New("private key does not match public key")
 )
 
 type Certificate interface {
@@ -87,7 +87,7 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (tls.Certificate, error) {
 				return tls.Certificate{}, errKeyPair
 			}
 		default:
-			return tls.Certificate{}, fmt.Errorf("unknown public key algorithm")
+			return tls.Certificate{}, errors.New("unknown public key algorithm")
 		}
 	}
 
@@ -166,7 +166,7 @@ func decodePEM(raw []byte, typ string) ([][]byte, error) {
 
 	if len(blocks) == 0 {
 		if len(skippedBlockTypes) == 0 {
-			return nil, fmt.Errorf("failed to find any  data in input")
+			return nil, errors.New("failed to find any data in input")
 		}
 		return nil, fmt.Errorf("failed to find %q  block in input after skipping blocks of the following types: %v", typ, skippedBlockTypes)
 	}

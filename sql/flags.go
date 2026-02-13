@@ -5,7 +5,7 @@ import (
 	"time"
 
 	cmdutils "github.com/kilnfi/go-utils/cmd/utils"
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -57,20 +57,25 @@ func (fl *FlagPrefixer) Flags(v *viper.Viper, f *pflag.FlagSet) {
 	fl.ConnectTimeoutFlag(v, f)
 }
 
-func (fl *FlagPrefixer) ConfigFromViper(v *viper.Viper) *Config {
+func (fl *FlagPrefixer) ConfigFromViper(v *viper.Viper) (*Config, error) {
+	port, err := fl.GetPort(v)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		Dialect:        fl.dialect,
 		User:           fl.GetUser(v),
 		Password:       fl.GetPassword(v),
 		Host:           fl.GetHost(v),
-		Port:           fl.GetPort(v),
+		Port:           port,
 		DBName:         fl.GetDBName(v),
 		SSLMode:        fl.GetSSLMode(v),
 		SSLCert:        fl.tlsFlag.GetCert(v),
 		SSLKey:         fl.tlsFlag.GetKey(v),
 		SSLCA:          fl.tlsFlag.GetCA(v),
-		ConnectTimeout: &types.Duration{Duration: fl.GetConnectTimeout(v)},
-	}
+		ConnectTimeout: &common.Duration{Duration: fl.GetConnectTimeout(v)},
+	}, nil
 }
 
 const (
@@ -159,8 +164,18 @@ func (fl *FlagPrefixer) PortFlag(v *viper.Viper, f *pflag.FlagSet) {
 	v.SetDefault(fl.ViperKey(portViperKey), portDefault)
 }
 
-func (fl *FlagPrefixer) GetPort(v *viper.Viper) uint16 {
-	return uint16(v.GetUint32(fl.ViperKey(portViperKey)))
+func (fl *FlagPrefixer) GetPort(v *viper.Viper) (uint16, error) {
+	port := v.GetUint32(fl.ViperKey(portViperKey))
+	if port > uint32(^uint16(0)) {
+		return 0, fmt.Errorf(
+			"%s value %d is out of range, must be between 0 and %d",
+			fl.ViperKey(portViperKey),
+			port,
+			uint32(^uint16(0)),
+		)
+	}
+
+	return uint16(port), nil
 }
 
 const (
