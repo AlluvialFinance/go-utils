@@ -264,7 +264,7 @@ func TestCurrentFunctions(t *testing.T) {
 	}
 
 	currentCLEpoch := uint64(10357)
-	currentTime := time.Date(2025, 05, 02, 12, 59, 0, 0, time.UTC).Unix()
+	currentTime := time.Date(2025, 5, 2, 12, 59, 0, 0, time.UTC).Unix()
 	require.Equal(t, currentCLEpoch, uint64(spec.TimeToEpoch(currentTime)))
 
 	// Test CurrentSlot

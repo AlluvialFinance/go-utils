@@ -118,7 +118,7 @@ func (spec *Spec) TimeToSlot(t int64) Slot {
 	if t < spec.GenesisTime {
 		return 0
 	}
-	return Slot(uint64(t-spec.GenesisTime) / spec.SecondsPerSlot)
+	return Slot(uint64(t-spec.GenesisTime) / spec.SecondsPerSlot) //nolint:gosec // G115: t >= spec.GenesisTime is guaranteed by the check above
 }
 
 // SlotToEpoch converts a slot number to its corresponding epoch
