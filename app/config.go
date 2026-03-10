@@ -56,6 +56,8 @@ func (cfg *Config) SetDefault() *Config {
 		cfg.StopTimeout = &common.Duration{Duration: 10 * time.Second}
 	}
 
+	cfg.PProf.SetDefaults()
+
 	return cfg
 }
 

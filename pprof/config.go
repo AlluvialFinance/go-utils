@@ -33,6 +33,9 @@ func (cfg *Config) Validate() error {
 
 // SetDefaults sets default values for unset fields.
 func (cfg *Config) SetDefaults() {
+	if cfg == nil {
+		return
+	}
 	if cfg.Address == "" {
 		cfg.Address = DefaultAddress
 	}

@@ -43,17 +43,18 @@ func TestPProfConfig(t *testing.T) {
 		assert.Nil(t, app.pprofServer)
 	})
 
-	t.Run("pprof enabled without address fails validation", func(t *testing.T) {
+	t.Run("pprof enabled without address uses default", func(t *testing.T) {
 		cfg := (&Config{
 			PProf: &pprof.Config{
 				Enabled: true,
-				Address: "",
+				// Address not set - should use default
 			},
 		}).SetDefault()
 
-		_, err := New(cfg)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "address is required")
+		app, err := New(cfg)
+		require.NoError(t, err)
+		require.NotNil(t, app.pprofServer)
+		assert.Equal(t, pprof.DefaultAddress, cfg.PProf.Address)
 	})
 
 	t.Run("pprof enabled with address creates server", func(t *testing.T) {
