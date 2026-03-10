@@ -7,12 +7,14 @@ import (
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnnet "github.com/kilnfi/go-utils/net"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/pprof"
 )
 
 type Config struct {
 	Logger         *kilnlog.Config
 	Server         *kilnhttp.ServerConfig
 	Healthz        *kilnhttp.ServerConfig
+	PProf          *pprof.Config
 	StartTimeout   *common.Duration
 	StopTimeout    *common.Duration
 	LogMemoryUsage bool // Enable memory usage logging in HTTP middleware (for debugging)
@@ -55,4 +57,13 @@ func (cfg *Config) SetDefault() *Config {
 	}
 
 	return cfg
+}
+
+// Validate checks that the configuration is valid.
+// Must be called after SetDefault.
+func (cfg *Config) Validate() error {
+	if err := cfg.PProf.Validate(); err != nil {
+		return err
+	}
+	return nil
 }

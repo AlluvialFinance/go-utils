@@ -3,6 +3,7 @@ package app
 import (
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/pprof"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -19,6 +20,7 @@ func Flags(v *viper.Viper, f *pflag.FlagSet) {
 	kilnlog.Flags(v, f)
 	serverFlags.Flags(v, f)
 	healthFlags.Flags(v, f)
+	pprof.Flags(v, f)
 }
 
 // ConfigFromViper construct app Config from viper
@@ -27,5 +29,6 @@ func ConfigFromViper(v *viper.Viper) *Config {
 		Logger:  kilnlog.ConfigFromViper(v),
 		Server:  serverFlags.ConfigFromViper(v),
 		Healthz: healthFlags.ConfigFromViper(v),
+		PProf:   pprof.ConfigFromViper(v),
 	}
 }

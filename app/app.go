@@ -19,6 +19,7 @@ import (
 	"github.com/justinas/alice"
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/pprof"
 	"github.com/kilnfi/go-utils/tracing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -49,6 +50,8 @@ type App struct {
 	healthMux    *httprouter.Router
 	healthServer *kilnhttp.Server
 
+	pprofServer *pprof.Server
+
 	liveness  *health.Health
 	readiness *health.Health
 
@@ -70,6 +73,11 @@ type App struct {
 
 // New creates a new App
 func New(cfg *Config) (*App, error) {
+	// Validate config before any initialization
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	logger, err := kilnlog.New(cfg.Logger)
 	if err != nil {
 		return nil, err
@@ -90,20 +98,27 @@ func New(cfg *Config) (*App, error) {
 	liveness, _ := health.New()
 	readiness, _ := health.New()
 
-	return &App{
+	app := &App{
 		cfg:          cfg,
 		mux:          httprouter.New(),
 		middlewares:  alice.New(),
 		server:       server,
 		healthMux:    httprouter.New(),
 		healthServer: healthServer,
+		pprofServer:  pprof.NewServer(cfg.PProf, logger),
 		liveness:     liveness,
 		readiness:    readiness,
 		prometheus:   prometheus.NewRegistry(),
 		logger:       logger,
 		done:         make(chan os.Signal, 1),
 		shutdownCh:   make(chan ShutdownRequest, 1),
-	}, nil
+	}
+
+	if app.pprofServer != nil {
+		logger.WithField("address", cfg.PProf.Address).Warn("pprof server enabled - ensure this is a dev environment")
+	}
+
+	return app, nil
 }
 
 func (app *App) SetLogger(logger *logrus.Logger) {
@@ -734,16 +749,27 @@ func (app *App) startSignalsAndServers(ctx context.Context) error {
 		return err
 	}
 
+	// Start pprof server (non-blocking, runs in goroutine)
+	app.pprofServer.Start()
+
 	return nil
 }
 
 func (app *App) stopSignalsAndServers(ctx context.Context) error {
 	app.stopListeningSignals()
+
+	// Stop pprof server first (if running)
+	pErr := app.pprofServer.Stop(ctx)
+
 	sErr := app.server.Stop(ctx)
 	hErr := app.healthServer.Stop(ctx)
+
+	// Return first error
+	if pErr != nil {
+		return pErr
+	}
 	if hErr != nil {
 		return hErr
 	}
-
 	return sErr
 }
