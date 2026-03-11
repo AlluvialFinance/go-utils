@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kilnfi/go-utils/pprof"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,6 +21,64 @@ func TestApp(t *testing.T) {
 	_, err := New(cfg)
 
 	require.NoError(t, err)
+}
+
+func TestPProfConfig(t *testing.T) {
+	t.Run("pprof disabled by default", func(t *testing.T) {
+		cfg := (&Config{}).SetDefault()
+		app, err := New(cfg)
+		require.NoError(t, err)
+		assert.Nil(t, app.pprofServer)
+	})
+
+	t.Run("pprof disabled is valid", func(t *testing.T) {
+		cfg := (&Config{
+			PProf: &pprof.Config{
+				Enabled: false,
+			},
+		}).SetDefault()
+
+		app, err := New(cfg)
+		require.NoError(t, err)
+		assert.Nil(t, app.pprofServer)
+	})
+
+	t.Run("pprof enabled without address uses default", func(t *testing.T) {
+		cfg := (&Config{
+			PProf: &pprof.Config{
+				Enabled: true,
+				// Address not set - should use default
+			},
+		}).SetDefault()
+
+		app, err := New(cfg)
+		require.NoError(t, err)
+		require.NotNil(t, app.pprofServer)
+		assert.Equal(t, pprof.DefaultAddress, cfg.PProf.Address)
+	})
+
+	t.Run("pprof enabled with address creates server", func(t *testing.T) {
+		cfg := (&Config{
+			PProf: &pprof.Config{
+				Enabled: true,
+				Address: "127.0.0.1:6060",
+			},
+		}).SetDefault()
+
+		app, err := New(cfg)
+		require.NoError(t, err)
+		require.NotNil(t, app.pprofServer)
+	})
+
+	t.Run("nil pprof config is valid", func(t *testing.T) {
+		cfg := (&Config{
+			PProf: nil,
+		}).SetDefault()
+
+		app, err := New(cfg)
+		require.NoError(t, err)
+		assert.Nil(t, app.pprofServer)
+	})
 }
 
 // mockShutdownAwareService is a test service that implements ShutdownAware
