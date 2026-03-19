@@ -611,7 +611,7 @@ func TestEpochBoundaries(t *testing.T) {
 	spec, err := GetSpecByChainID(MainnetChainID)
 	require.NoError(t, err)
 
-	epochDuration := int64(spec.SlotsPerEpoch * spec.SecondsPerSlot)
+	epochDuration := int64(spec.SlotsPerEpoch * spec.SecondsPerSlot) //nolint:gosec // G115: overflow not possible for reasonable epoch durations
 
 	t.Run("Just before epoch boundary", func(t *testing.T) {
 		timestamp := spec.GenesisTime + epochDuration - 1
