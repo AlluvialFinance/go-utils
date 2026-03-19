@@ -2,6 +2,7 @@
 package ethcl
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -308,5 +309,439 @@ func TestEdgeCases(t *testing.T) {
 	if epoch := spec.TimeToEpoch(epochBoundaryTime); epoch != expectedEpoch {
 		t.Errorf("At epoch boundary: TimeToEpoch(%d) = %d, want %d",
 			epochBoundaryTime, epoch, expectedEpoch)
+	}
+}
+
+func TestEpochToSlot(t *testing.T) {
+	spec := &Spec{
+		ChainID:        MainnetChainID,
+		GenesisTime:    1606824023,
+		SecondsPerSlot: 12,
+		SlotsPerEpoch:  32,
+		NetworkName:    "Mainnet",
+	}
+
+	tests := []struct {
+		name         string
+		epoch        Epoch
+		expectedSlot Slot
+	}{
+		{
+			name:         "Epoch 0",
+			epoch:        0,
+			expectedSlot: 0,
+		},
+		{
+			name:         "Epoch 1",
+			epoch:        1,
+			expectedSlot: 32,
+		},
+		{
+			name:         "Epoch 2",
+			epoch:        2,
+			expectedSlot: 64,
+		},
+		{
+			name:         "Epoch 10",
+			epoch:        10,
+			expectedSlot: 320,
+		},
+		{
+			name:         "Epoch 100",
+			epoch:        100,
+			expectedSlot: 3200,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			slot := spec.EpochToSlot(tt.epoch)
+			require.Equal(t, tt.expectedSlot, slot)
+		})
+	}
+}
+
+func TestSlotToTime(t *testing.T) {
+	spec := &Spec{
+		ChainID:        MainnetChainID,
+		GenesisTime:    1606824023,
+		SecondsPerSlot: 12,
+		SlotsPerEpoch:  32,
+		NetworkName:    "Mainnet",
+	}
+
+	tests := []struct {
+		name              string
+		slot              Slot
+		expectedTimestamp int64
+	}{
+		{
+			name:              "Slot 0",
+			slot:              0,
+			expectedTimestamp: 1606824023,
+		},
+		{
+			name:              "Slot 1",
+			slot:              1,
+			expectedTimestamp: 1606824023 + 12,
+		},
+		{
+			name:              "Slot 32 (epoch 1 start)",
+			slot:              32,
+			expectedTimestamp: 1606824023 + (32 * 12),
+		},
+		{
+			name:              "Slot 100",
+			slot:              100,
+			expectedTimestamp: 1606824023 + (100 * 12),
+		},
+		{
+			name:              "Slot 1000",
+			slot:              1000,
+			expectedTimestamp: 1606824023 + (1000 * 12),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			timestamp := spec.SlotToTime(tt.slot)
+			require.Equal(t, tt.expectedTimestamp, timestamp)
+		})
+	}
+}
+
+func TestEpochToTime(t *testing.T) {
+	spec := &Spec{
+		ChainID:        MainnetChainID,
+		GenesisTime:    1606824023,
+		SecondsPerSlot: 12,
+		SlotsPerEpoch:  32,
+		NetworkName:    "Mainnet",
+	}
+
+	tests := []struct {
+		name              string
+		epoch             Epoch
+		expectedTimestamp int64
+	}{
+		{
+			name:              "Epoch 0",
+			epoch:             0,
+			expectedTimestamp: 1606824023,
+		},
+		{
+			name:              "Epoch 1",
+			epoch:             1,
+			expectedTimestamp: 1606824023 + (32 * 12),
+		},
+		{
+			name:              "Epoch 2",
+			epoch:             2,
+			expectedTimestamp: 1606824023 + (64 * 12),
+		},
+		{
+			name:              "Epoch 10",
+			epoch:             10,
+			expectedTimestamp: 1606824023 + (320 * 12),
+		},
+		{
+			name:              "Epoch 100",
+			epoch:             100,
+			expectedTimestamp: 1606824023 + (3200 * 12),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			timestamp := spec.EpochToTime(tt.epoch)
+			require.Equal(t, tt.expectedTimestamp, timestamp)
+		})
+	}
+}
+
+func TestShardCommitteePeriod(t *testing.T) {
+	spec, err := GetSpecByChainID(MainnetChainID)
+	require.NoError(t, err)
+
+	period := spec.ShardCommitteePeriod()
+	require.Equal(t, uint64(ShardCommitteePeriod), period)
+	require.Equal(t, uint64(256), period)
+}
+
+func TestEpochUint64(t *testing.T) {
+	tests := []struct {
+		name     string
+		epoch    Epoch
+		expected uint64
+	}{
+		{
+			name:     "Epoch 0",
+			epoch:    0,
+			expected: 0,
+		},
+		{
+			name:     "Epoch 1",
+			epoch:    1,
+			expected: 1,
+		},
+		{
+			name:     "Epoch 100",
+			epoch:    100,
+			expected: 100,
+		},
+		{
+			name:     "Large epoch",
+			epoch:    1000000,
+			expected: 1000000,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.epoch.Uint64()
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestRoundTripConversions(t *testing.T) {
+	spec, err := GetSpecByChainID(MainnetChainID)
+	require.NoError(t, err)
+
+	t.Run("Time -> Slot -> Time", func(t *testing.T) {
+		originalTime := spec.GenesisTime + 1000*12
+		slot := spec.TimeToSlot(originalTime)
+		convertedTime := spec.SlotToTime(slot)
+		require.Equal(t, originalTime, convertedTime)
+	})
+
+	t.Run("Slot -> Epoch -> Slot", func(t *testing.T) {
+		originalSlot := Slot(320) // Start of epoch 10
+		epoch := spec.SlotToEpoch(originalSlot)
+		convertedSlot := spec.EpochToSlot(epoch)
+		require.Equal(t, originalSlot, convertedSlot)
+	})
+
+	t.Run("Epoch -> Time -> Epoch", func(t *testing.T) {
+		originalEpoch := Epoch(10)
+		timestamp := spec.EpochToTime(originalEpoch)
+		convertedEpoch := spec.TimeToEpoch(timestamp)
+		require.Equal(t, originalEpoch, convertedEpoch)
+	})
+
+	t.Run("Epoch -> Slot -> Epoch", func(t *testing.T) {
+		originalEpoch := Epoch(5)
+		slot := spec.EpochToSlot(originalEpoch)
+		convertedEpoch := spec.SlotToEpoch(slot)
+		require.Equal(t, originalEpoch, convertedEpoch)
+	})
+}
+
+func TestMultipleNetworks(t *testing.T) {
+	networks := []uint64{
+		MainnetChainID,
+		GoerliChainID,
+		SepoliaChainID,
+		HoleskyChainID,
+		HoodiChainID,
+		LocalChainID,
+	}
+
+	for _, chainID := range networks {
+		t.Run("Chain ID "+strconv.FormatUint(chainID, 10), func(t *testing.T) {
+			spec, err := GetSpecByChainID(chainID)
+			require.NoError(t, err)
+			require.NotNil(t, spec)
+
+			// Test basic conversions work
+			slot := spec.TimeToSlot(spec.GenesisTime + 1000)
+			require.Greater(t, uint64(slot), uint64(0))
+
+			epoch := spec.SlotToEpoch(100)
+			require.GreaterOrEqual(t, uint64(epoch), uint64(0))
+
+			timestamp := spec.SlotToTime(100)
+			require.Greater(t, timestamp, spec.GenesisTime)
+
+			// Test constants
+			require.Equal(t, SecondsPerSlot, spec.SecondsPerSlot)
+			require.Equal(t, SlotsPerEpoch, spec.SlotsPerEpoch)
+		})
+	}
+}
+
+func TestTimeConversionConsistency(t *testing.T) {
+	spec, err := GetSpecByChainID(MainnetChainID)
+	require.NoError(t, err)
+
+	// Test that TimeToEpoch is consistent with TimeToSlot + SlotToEpoch
+	testTime := spec.GenesisTime + 5000
+
+	directEpoch := spec.TimeToEpoch(testTime)
+
+	slot := spec.TimeToSlot(testTime)
+	indirectEpoch := spec.SlotToEpoch(slot)
+
+	require.Equal(t, directEpoch, indirectEpoch)
+}
+
+func TestSlotBoundaries(t *testing.T) {
+	spec, err := GetSpecByChainID(MainnetChainID)
+	require.NoError(t, err)
+
+	t.Run("Just before slot boundary", func(t *testing.T) {
+		timestamp := spec.GenesisTime + 11 // 1 second before slot 1
+		slot := spec.TimeToSlot(timestamp)
+		require.Equal(t, Slot(0), slot)
+	})
+
+	t.Run("Exactly at slot boundary", func(t *testing.T) {
+		timestamp := spec.GenesisTime + 12 // Exactly at slot 1
+		slot := spec.TimeToSlot(timestamp)
+		require.Equal(t, Slot(1), slot)
+	})
+
+	t.Run("Just after slot boundary", func(t *testing.T) {
+		timestamp := spec.GenesisTime + 13 // 1 second after slot 1 starts
+		slot := spec.TimeToSlot(timestamp)
+		require.Equal(t, Slot(1), slot)
+	})
+}
+
+func TestEpochBoundaries(t *testing.T) {
+	spec, err := GetSpecByChainID(MainnetChainID)
+	require.NoError(t, err)
+
+	// Calculate epoch duration: 32 slots * 12 seconds = 384 seconds
+	// Use const values to avoid uint64->int64 conversion warnings
+	const slotsPerEpoch int64 = 32
+	const secondsPerSlot int64 = 12
+	epochDuration := slotsPerEpoch * secondsPerSlot
+
+	// Verify our constants match the spec
+	require.Equal(t, uint64(slotsPerEpoch), spec.SlotsPerEpoch)
+	require.Equal(t, uint64(secondsPerSlot), spec.SecondsPerSlot)
+
+	t.Run("Just before epoch boundary", func(t *testing.T) {
+		timestamp := spec.GenesisTime + epochDuration - 1
+		epoch := spec.TimeToEpoch(timestamp)
+		require.Equal(t, Epoch(0), epoch)
+	})
+
+	t.Run("Exactly at epoch boundary", func(t *testing.T) {
+		timestamp := spec.GenesisTime + epochDuration
+		epoch := spec.TimeToEpoch(timestamp)
+		require.Equal(t, Epoch(1), epoch)
+	})
+
+	t.Run("Just after epoch boundary", func(t *testing.T) {
+		timestamp := spec.GenesisTime + epochDuration + 1
+		epoch := spec.TimeToEpoch(timestamp)
+		require.Equal(t, Epoch(1), epoch)
+	})
+}
+
+func TestLargeValues(t *testing.T) {
+	spec, err := GetSpecByChainID(MainnetChainID)
+	require.NoError(t, err)
+
+	t.Run("Very large slot number", func(t *testing.T) {
+		largeSlot := Slot(10000000) // ~10 million slots
+		timestamp := spec.SlotToTime(largeSlot)
+		convertedSlot := spec.TimeToSlot(timestamp)
+		require.Equal(t, largeSlot, convertedSlot)
+	})
+
+	t.Run("Very large epoch number", func(t *testing.T) {
+		largeEpoch := Epoch(100000) // 100k epochs
+		timestamp := spec.EpochToTime(largeEpoch)
+		convertedEpoch := spec.TimeToEpoch(timestamp)
+		require.Equal(t, largeEpoch, convertedEpoch)
+	})
+}
+
+func TestNetworkSpecificValues(t *testing.T) {
+	t.Run("Hoodi network has different average block time", func(t *testing.T) {
+		spec, err := GetSpecByChainID(HoodiChainID)
+		require.NoError(t, err)
+		require.Equal(t, 13.1, spec.AverageBlockTimeSeconds)
+		require.Equal(t, uint64(30000), spec.NetworkOffsetBlocks)
+	})
+
+	t.Run("Mainnet has standard values", func(t *testing.T) {
+		spec, err := GetSpecByChainID(MainnetChainID)
+		require.NoError(t, err)
+		require.Equal(t, 12.0, spec.AverageBlockTimeSeconds)
+		require.Equal(t, uint64(100), spec.NetworkOffsetBlocks)
+	})
+}
+
+func TestLocalChainID(t *testing.T) {
+	spec, err := GetSpecByChainID(LocalChainID)
+	require.NoError(t, err)
+	require.Equal(t, "Local", spec.NetworkName)
+	require.Equal(t, LocalChainID, spec.ChainID)
+	require.Equal(t, int64(1748879977), spec.GenesisTime)
+}
+
+func TestSpecificNetworkEpochs(t *testing.T) {
+	tests := []struct {
+		name              string
+		chainID           uint64
+		epoch             Epoch
+		expectedTimestamp int64
+		dateDescription   string
+	}{
+		{
+			name:              "Mainnet epoch 435138",
+			chainID:           MainnetChainID,
+			epoch:             435138,
+			expectedTimestamp: 1773917015, // Mar-19-2026 10:43:35 UTC
+			dateDescription:   "Mar-19-2026 10:43:35 UTC",
+		},
+		{
+			name:              "Hoodi epoch 82562",
+			chainID:           HoodiChainID,
+			epoch:             82562,
+			expectedTimestamp: 1773917208, // Mar-19-2026 10:46:48 UTC
+			dateDescription:   "Mar-19-2026 10:46:48 UTC",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			spec, err := GetSpecByChainID(tt.chainID)
+			require.NoError(t, err)
+
+			t.Run("Epoch to Time", func(t *testing.T) {
+				timestamp := spec.EpochToTime(tt.epoch)
+				require.Equal(t, tt.expectedTimestamp, timestamp,
+					"Epoch %d should convert to %s", tt.epoch, tt.dateDescription)
+			})
+
+			t.Run("Time to Epoch", func(t *testing.T) {
+				epoch := spec.TimeToEpoch(tt.expectedTimestamp)
+				require.Equal(t, tt.epoch, epoch,
+					"Timestamp %s should convert to epoch %d", tt.dateDescription, tt.epoch)
+			})
+
+			t.Run("Round trip conversion", func(t *testing.T) {
+				// Epoch -> Time -> Epoch
+				timestamp := spec.EpochToTime(tt.epoch)
+				convertedEpoch := spec.TimeToEpoch(timestamp)
+				require.Equal(t, tt.epoch, convertedEpoch)
+			})
+
+			t.Run("Slot calculations", func(t *testing.T) {
+				// Calculate expected slot (epoch * slots per epoch)
+				expectedSlot := Slot(uint64(tt.epoch) * spec.SlotsPerEpoch)
+				slot := spec.EpochToSlot(tt.epoch)
+				require.Equal(t, expectedSlot, slot)
+
+				// Verify slot to time matches epoch time
+				slotTimestamp := spec.SlotToTime(expectedSlot)
+				require.Equal(t, tt.expectedTimestamp, slotTimestamp)
+			})
+		})
 	}
 }
