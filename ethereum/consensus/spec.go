@@ -26,8 +26,6 @@ const (
 	LocalChainID   uint64 = 3151908
 )
 
-// Timestamp represents a UNIX timestamp in seconds
-
 // Slot represents a consensus layer slot number
 type Slot uint64
 
@@ -130,6 +128,22 @@ func (spec *Spec) SlotToEpoch(s Slot) Epoch {
 func (spec *Spec) TimeToEpoch(t int64) Epoch {
 	slot := spec.TimeToSlot(t)
 	return spec.SlotToEpoch(slot)
+}
+
+// EpochToSlot converts an epoch number to its first slot
+func (spec *Spec) EpochToSlot(e Epoch) Slot {
+	return Slot(uint64(e) * spec.SlotsPerEpoch)
+}
+
+// SlotToTime converts a slot number to its UNIX timestamp
+func (spec *Spec) SlotToTime(s Slot) int64 {
+	return spec.GenesisTime + int64(uint64(s)*spec.SecondsPerSlot)
+}
+
+// EpochToTime converts an epoch number to the UNIX timestamp
+// of the first slot in that epoch
+func (spec *Spec) EpochToTime(e Epoch) int64 {
+	return spec.SlotToTime(spec.EpochToSlot(e))
 }
 
 // CurrentSlot returns the current slot based on the current time
