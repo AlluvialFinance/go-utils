@@ -2,6 +2,7 @@
 package ethcl
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -547,7 +548,7 @@ func TestMultipleNetworks(t *testing.T) {
 	}
 
 	for _, chainID := range networks {
-		t.Run("Chain ID "+string(rune(chainID)), func(t *testing.T) {
+		t.Run("Chain ID "+strconv.FormatUint(chainID, 10), func(t *testing.T) {
 			spec, err := GetSpecByChainID(chainID)
 			require.NoError(t, err)
 			require.NotNil(t, spec)
@@ -611,7 +612,8 @@ func TestEpochBoundaries(t *testing.T) {
 	spec, err := GetSpecByChainID(MainnetChainID)
 	require.NoError(t, err)
 
-	epochDuration := int64(spec.SlotsPerEpoch * spec.SecondsPerSlot) //nolint:gosec // G115: overflow not possible for reasonable epoch durations
+	// Epoch duration: 32 slots * 12 seconds = 384 seconds
+	const epochDuration int64 = 384
 
 	t.Run("Just before epoch boundary", func(t *testing.T) {
 		timestamp := spec.GenesisTime + epochDuration - 1

@@ -139,10 +139,9 @@ func (spec *Spec) EpochToSlot(e Epoch) Slot {
 // SlotToTime converts a slot number to its UNIX timestamp
 func (spec *Spec) SlotToTime(s Slot) int64 {
 	slotSeconds := uint64(s) * spec.SecondsPerSlot
-	// Check if the result would overflow int64
-	if slotSeconds > uint64(1<<63-1) {
-		// This should never happen in practice with reasonable slot numbers
-		return spec.GenesisTime
+	// Verify conversion to int64 is safe
+	if slotSeconds > math.MaxInt64 {
+		panic(fmt.Sprintf("slot %d is too large to convert to timestamp", s))
 	}
 	return spec.GenesisTime + int64(slotSeconds)
 }
