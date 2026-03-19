@@ -612,8 +612,15 @@ func TestEpochBoundaries(t *testing.T) {
 	spec, err := GetSpecByChainID(MainnetChainID)
 	require.NoError(t, err)
 
-	// Epoch duration: 32 slots * 12 seconds = 384 seconds
-	const epochDuration int64 = 384
+	// Calculate epoch duration: 32 slots * 12 seconds = 384 seconds
+	// Use const values to avoid uint64->int64 conversion warnings
+	const slotsPerEpoch int64 = 32
+	const secondsPerSlot int64 = 12
+	epochDuration := slotsPerEpoch * secondsPerSlot
+
+	// Verify our constants match the spec
+	require.Equal(t, uint64(slotsPerEpoch), spec.SlotsPerEpoch)
+	require.Equal(t, uint64(secondsPerSlot), spec.SecondsPerSlot)
 
 	t.Run("Just before epoch boundary", func(t *testing.T) {
 		timestamp := spec.GenesisTime + epochDuration - 1
