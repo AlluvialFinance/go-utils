@@ -154,8 +154,8 @@ func (spec *Spec) EpochToTime(e Epoch) int64 {
 
 // CurrentSlot returns the current slot based on the current time
 func (spec *Spec) CurrentSlot() Slot {
-	currentTime := time.Now().Unix()
-	return spec.TimeToSlot(currentTime)
+	currentTimeSeconds := time.Now().Unix()
+	return spec.TimeToSlot(currentTimeSeconds)
 }
 
 func (spec *Spec) ShardCommitteePeriod() uint64 {
