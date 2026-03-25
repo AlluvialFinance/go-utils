@@ -1,7 +1,6 @@
 package tls
 
 import (
-	"bytes"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
@@ -67,7 +66,7 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (tls.Certificate, error) {
 			if !ok {
 				return tls.Certificate{}, errKeyPairTypes
 			}
-			if pub.N.Cmp(priv.N) != 0 {
+			if !pub.Equal(&priv.PublicKey) {
 				return tls.Certificate{}, errKeyPair
 			}
 		case *ecdsa.PublicKey:
@@ -75,7 +74,7 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (tls.Certificate, error) {
 			if !ok {
 				return tls.Certificate{}, errKeyPairTypes
 			}
-			if pub.X.Cmp(priv.X) != 0 || pub.Y.Cmp(priv.Y) != 0 {
+			if !pub.Equal(&priv.PublicKey) {
 				return tls.Certificate{}, errKeyPair
 			}
 		case ed25519.PublicKey:
@@ -83,7 +82,7 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (tls.Certificate, error) {
 			if !ok {
 				return tls.Certificate{}, errKeyPairTypes
 			}
-			if !bytes.Equal(priv.Public().(ed25519.PublicKey), pub) {
+			if !pub.Equal(priv.Public()) {
 				return tls.Certificate{}, errKeyPair
 			}
 		default:

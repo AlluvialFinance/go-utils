@@ -110,6 +110,9 @@ linters:
       - linters:
           - revive
         text: "unknown option \"inline\" in json tag"
+      - linters:
+          - revive
+        text: "package-naming:"
 issues:
   max-issues-per-linter: 10000
   max-same-issues: 10000

@@ -265,15 +265,15 @@ func TestCurrentFunctions(t *testing.T) {
 	}
 
 	currentCLEpoch := uint64(10357)
-	currentTime := time.Date(2025, 5, 2, 12, 59, 0, 0, time.UTC).Unix()
-	require.Equal(t, currentCLEpoch, uint64(spec.TimeToEpoch(currentTime)))
+	currentTimeSeconds := time.Date(2025, 5, 2, 12, 59, 0, 0, time.UTC).Unix()
+	require.Equal(t, currentCLEpoch, uint64(spec.TimeToEpoch(currentTimeSeconds)))
 
 	// Test CurrentSlot
 	currentSlot := spec.CurrentSlot()
 
 	// Calculate expected slot range
-	now := time.Now().Unix()
-	expectedSlot := spec.TimeToSlot(now)
+	nowSeconds := time.Now().Unix()
+	expectedSlot := spec.TimeToSlot(nowSeconds)
 
 	// The slot should be very close to what we calculate
 	if currentSlot < expectedSlot-1 || currentSlot > expectedSlot+1 {

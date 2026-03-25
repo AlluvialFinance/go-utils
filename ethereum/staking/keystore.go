@@ -118,7 +118,7 @@ func (mngr *KeystoreManager) EncryptToPrysmKeystore(vkeys []*ValidatorKey, pwd s
 		exists[string(vkeys[i].PrivKey.Marshal())] = true
 	}
 
-	encodedStore, err := json.MarshalIndent(accStore, "", "\t")
+	encodedStore, err := json.MarshalIndent(accStore, "", "\t") //nolint:gosec // G117: intentional marshaling of private keys for keystore storage
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ INTEGRATION_COVERAGE_OUT = $(COVERAGE_BUILD_FOLDER)/it_cov.out
 INTEGRATION_COVERAGE_HTML =$(COVERAGE_BUILD_FOLDER)/it_index.html
 
 # Test lint variables
-GOLANGCI_VERSION = v2.8.0
+GOLANGCI_VERSION = v2.11.4
 
 MOCKGEN = go run github.com/golang/mock/mockgen@v1.6.0 \
 
