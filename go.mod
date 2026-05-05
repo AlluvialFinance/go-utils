@@ -1,6 +1,6 @@
 module github.com/kilnfi/go-utils
 
-go 1.26.1
+go 1.26.2
 
 require (
 	github.com/Azure/go-autorest/autorest v0.11.30 //deprecated
@@ -16,7 +16,7 @@ require (
 	github.com/hellofresh/health-go/v4 v4.7.0
 	github.com/herumi/bls-eth-go-binary v1.37.0
 	github.com/jackc/pgconn v1.14.3
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/justinas/alice v1.2.0
 	github.com/pkg/errors v0.9.1
