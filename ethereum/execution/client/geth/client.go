@@ -24,6 +24,7 @@ type Client struct {
 	*ethclient.Client
 
 	address   string
+	headers   map[string]string
 	rpcclient *rpc.Client
 
 	chainID *big.Int
@@ -36,8 +37,19 @@ func NewClient(address string) *Client {
 	}
 }
 
+func NewClientWithHeaders(address string, headers map[string]string) *Client {
+	return &Client{
+		address: address,
+		headers: headers,
+	}
+}
+
 func (c *Client) Init(ctx context.Context) error {
-	rpcClient, err := rpc.DialOptions(ctx, c.address)
+	dialOpts := make([]rpc.ClientOption, 0, len(c.headers))
+	for key, value := range c.headers {
+		dialOpts = append(dialOpts, rpc.WithHeader(key, value))
+	}
+	rpcClient, err := rpc.DialOptions(ctx, c.address, dialOpts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect execution layer: %w", err)
 	}

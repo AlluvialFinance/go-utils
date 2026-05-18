@@ -10,6 +10,8 @@ type Config struct {
 
 	DisableLog bool
 
+	Headers map[string]string
+
 	HTTP *kilnhttp.ClientConfig
 }
 

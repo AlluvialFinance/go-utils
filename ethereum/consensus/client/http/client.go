@@ -40,10 +40,15 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
+	inspector := autorest.PrepareDecorator(httppreparer.WithBaseURL(cfg.Address))
+	if len(cfg.Headers) > 0 {
+		inspector = withHeaders(cfg.Headers, inspector)
+	}
+
 	c := NewClientFromClient(
 		autorest.Client{
 			Sender:           httpc,
-			RequestInspector: httppreparer.WithBaseURL(cfg.Address),
+			RequestInspector: inspector,
 		},
 	)
 
@@ -53,6 +58,21 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	c.SetLogger(logrus.StandardLogger())
 	return c, nil
+}
+
+func withHeaders(headers map[string]string, inner autorest.PrepareDecorator) autorest.PrepareDecorator {
+	return func(p autorest.Preparer) autorest.Preparer {
+		return autorest.PreparerFunc(func(r *http.Request) (*http.Request, error) {
+			r, err := inner(p).Prepare(r)
+			if err != nil {
+				return r, err
+			}
+			for k, v := range headers {
+				r.Header.Set(k, v)
+			}
+			return r, nil
+		})
+	}
 }
 
 func (c *Client) Logger() logrus.FieldLogger {
