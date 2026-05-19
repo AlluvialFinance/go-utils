@@ -10,6 +10,8 @@ type Config struct {
 
 	DisableLog bool
 
+	Headers map[string]string
+
 	HTTP *kilnhttp.ClientConfig
 }
 
@@ -22,5 +24,14 @@ func (cfg *Config) SetDefault() *Config {
 
 	cfg.DisableLog = true // Log disabled by default
 
+	return cfg
+}
+
+func (cfg *Config) WithHeaders(headers map[string]string) *Config {
+	snapshot := make(map[string]string, len(headers))
+	for k, v := range headers {
+		snapshot[k] = v
+	}
+	cfg.Headers = snapshot
 	return cfg
 }

@@ -5,6 +5,8 @@ package jsonrpchttp
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -120,4 +122,42 @@ func testCallStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSende
 	)
 
 	require.Error(t, err)
+}
+
+func TestNewClient(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","result":"ok","id":0}`))
+	}))
+	defer srv.Close()
+
+	cfg := (&Config{Address: srv.URL}).SetDefault()
+	c, err := NewClient(cfg)
+	require.NoError(t, err)
+
+	var res string
+	err = c.Call(t.Context(), &jsonrpc.Request{Version: "2.0", Method: "test", ID: 0}, &res)
+	require.NoError(t, err)
+	assert.Equal(t, "ok", res)
+}
+
+func TestNewClientWithHeaders(t *testing.T) {
+	var receivedHeader string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedHeader = r.Header.Get("X-Api-Key")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","result":"ok","id":0}`))
+	}))
+	defer srv.Close()
+
+	cfg := (&Config{Address: srv.URL}).SetDefault().WithHeaders(map[string]string{
+		"X-Api-Key": "secret",
+	})
+	c, err := NewClient(cfg)
+	require.NoError(t, err)
+
+	var res string
+	err = c.Call(t.Context(), &jsonrpc.Request{Version: "2.0", Method: "test", ID: 0}, &res)
+	require.NoError(t, err)
+	assert.Equal(t, "secret", receivedHeader)
 }

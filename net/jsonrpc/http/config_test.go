@@ -1,21 +1,19 @@
 //go:build !integration
 
-//nolint:revive // package name intentionally reflects domain, not directory name
-package eth2http
+//revive:disable-next-line:package-directory-mismatch
+package jsonrpchttp
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConfig(t *testing.T) {
-	cfg := &Config{}
-
 	t.Run("default", func(t *testing.T) {
-		cfg.SetDefault()
-		assert.NotNil(t, cfg.HTTP)
-		assert.True(t, cfg.DisableLog)
+		cfg := new(Config).SetDefault()
+		require.NotNil(t, cfg.HTTP)
 	})
 
 	t.Run("WithHeaders", func(t *testing.T) {

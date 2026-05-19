@@ -40,10 +40,19 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
+	inspector := httppreparer.WithBaseURL(cfg.Address)
+	if len(cfg.Headers) > 0 {
+		base := inspector
+		headerDec := httppreparer.WithHeaders(cfg.Headers)
+		inspector = func(p autorest.Preparer) autorest.Preparer {
+			return headerDec(base(p))
+		}
+	}
+
 	return NewClientFromClient(
 		autorest.Client{
 			Sender:           httpc,
-			RequestInspector: httppreparer.WithBaseURL(cfg.Address),
+			RequestInspector: inspector,
 		},
 	), nil
 }
