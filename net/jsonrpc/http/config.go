@@ -22,6 +22,10 @@ func (cfg *Config) SetDefault() *Config {
 }
 
 func (cfg *Config) WithHeaders(headers map[string]string) *Config {
-	cfg.Headers = headers
+	snapshot := make(map[string]string, len(headers))
+	for k, v := range headers {
+		snapshot[k] = v
+	}
+	cfg.Headers = snapshot
 	return cfg
 }
