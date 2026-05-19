@@ -1,6 +1,6 @@
 module github.com/kilnfi/go-utils
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/Azure/go-autorest/autorest v0.11.30 //deprecated
