@@ -38,9 +38,13 @@ func NewClient(address string) *Client {
 }
 
 func NewClientWithHeaders(address string, headers map[string]string) *Client {
+	snapshot := make(map[string]string, len(headers))
+	for k, v := range headers {
+		snapshot[k] = v
+	}
 	return &Client{
 		address: address,
-		headers: headers,
+		headers: snapshot,
 	}
 }
 

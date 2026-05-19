@@ -54,13 +54,17 @@ func NewClient(cfg *Config) (*Client, error) {
 }
 
 func withHeaders(headers map[string]string, inner autorest.PrepareDecorator) autorest.PrepareDecorator {
+	snapshot := make(map[string]string, len(headers))
+	for k, v := range headers {
+		snapshot[k] = v
+	}
 	return func(p autorest.Preparer) autorest.Preparer {
 		return autorest.PreparerFunc(func(r *http.Request) (*http.Request, error) {
 			r, err := inner(p).Prepare(r)
 			if err != nil {
 				return r, err
 			}
-			for k, v := range headers {
+			for k, v := range snapshot {
 				r.Header.Set(k, v)
 			}
 			return r, nil
