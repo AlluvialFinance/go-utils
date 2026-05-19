@@ -40,7 +40,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
-	inspector := autorest.PrepareDecorator(httppreparer.WithBaseURL(cfg.Address))
+	inspector := httppreparer.WithBaseURL(cfg.Address)
 	if len(cfg.Headers) > 0 {
 		inspector = withHeaders(cfg.Headers, inspector)
 	}
