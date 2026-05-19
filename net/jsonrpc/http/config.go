@@ -7,8 +7,8 @@ import (
 
 type Config struct {
 	Address string
-
-	HTTP *kilnhttp.ClientConfig
+	Headers map[string]string
+	HTTP    *kilnhttp.ClientConfig
 }
 
 func (cfg *Config) SetDefault() *Config {
@@ -18,5 +18,10 @@ func (cfg *Config) SetDefault() *Config {
 
 	cfg.HTTP.SetDefault()
 
+	return cfg
+}
+
+func (cfg *Config) WithHeaders(headers map[string]string) *Config {
+	cfg.Headers = headers
 	return cfg
 }

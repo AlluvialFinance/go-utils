@@ -26,3 +26,8 @@ func (cfg *Config) SetDefault() *Config {
 
 	return cfg
 }
+
+func (cfg *Config) WithHeaders(headers map[string]string) *Config {
+	cfg.Headers = headers
+	return cfg
+}
