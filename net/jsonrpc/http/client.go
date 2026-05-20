@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package jsonrpchttp
 
 import (
@@ -7,11 +8,11 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/sirupsen/logrus"
-
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
+	"github.com/kilnfi/go-utils/tracing"
+	"github.com/sirupsen/logrus"
 )
 
 // Client allows to connect to a JSON-RPC server
@@ -39,10 +40,19 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
+	inspector := httppreparer.WithBaseURL(cfg.Address)
+	if len(cfg.Headers) > 0 {
+		base := inspector
+		headerDec := httppreparer.WithHeaders(cfg.Headers)
+		inspector = func(p autorest.Preparer) autorest.Preparer {
+			return headerDec(base(p))
+		}
+	}
+
 	return NewClientFromClient(
 		autorest.Client{
 			Sender:           httpc,
-			RequestInspector: httppreparer.WithBaseURL(cfg.Address),
+			RequestInspector: inspector,
 		},
 	), nil
 }
@@ -77,6 +87,9 @@ func (c *Client) call(ctx context.Context, r *jsonrpc.Request, res interface{}) 
 	}
 
 	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		msg, _ := json.Marshal(r)
 		return autorest.NewErrorWithError(err, "jsonrpchttp.Client", fmt.Sprintf("Call(%v)", string(msg)), resp, "Do")
@@ -103,6 +116,16 @@ func newCallRequest(ctx context.Context, req *jsonrpc.Request) (*http.Request, e
 
 func newRequest(ctx context.Context) *http.Request {
 	req, _ := http.NewRequestWithContext(ctx, "", "", http.NoBody)
+	if h := tracing.GetOutboundHeaders(ctx); h != nil {
+		for k, v := range h {
+			req.Header[k] = append([]string(nil), v...)
+		}
+	}
+	if req.Header.Get(tracing.HeaderTraceID) == "" {
+		if traceID := tracing.GetTraceID(ctx); traceID != "" {
+			req.Header.Set(tracing.HeaderTraceID, traceID)
+		}
+	}
 	return req
 }
 
@@ -131,13 +154,12 @@ func inspectCallResponseMsg(msg *responseMsg, res interface{}) error {
 	if msg.Result != nil && res != nil {
 		err := json.Unmarshal(*msg.Result, res)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal JSON-RPC result %v into %T (%v)", string(*msg.Result), res, err)
+			return fmt.Errorf("failed to unmarshal JSON-RPC result %v into %T (%w)", string(*msg.Result), res, err)
 		}
 		return nil
 	}
 
 	return nil
-
 }
 
 func inspectCallResponse(resp *http.Response, res interface{}) error {

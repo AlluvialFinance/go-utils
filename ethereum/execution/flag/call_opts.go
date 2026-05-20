@@ -2,9 +2,8 @@ package flag
 
 import (
 	gethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/pflag"
-
 	"github.com/kilnfi/go-utils/ethereum/execution/types"
+	"github.com/spf13/pflag"
 )
 
 // CallOptsVar registers a set of custom flags for eth1.CallOpts

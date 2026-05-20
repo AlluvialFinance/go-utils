@@ -1,6 +1,6 @@
 //go:build !integration
-// +build !integration
 
+//revive:disable-next-line:package-directory-mismatch
 package common
 
 import (

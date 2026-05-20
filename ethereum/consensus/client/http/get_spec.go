@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -21,6 +22,9 @@ func (c *Client) getSpec(ctx context.Context) (*beaconcommon.Spec, error) {
 	}
 
 	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetSpec", resp, "Failure sending request")
 	}
@@ -42,7 +46,7 @@ func newGetSpecRequest(ctx context.Context) (*http.Request, error) {
 
 // spec is an intermediary type allowing to properly unmarshal beacon config/spec responses
 
-//nolint:revive,stylecheck // use uppercase as per protolambda/zrnt package
+//nolint:revive // use uppercase as per protolambda/zrnt package
 type spec struct {
 	beaconcommon.Spec
 	BASE_REWARD_FACTOR                         view.Uint64View `json:"BASE_REWARD_FACTOR,string"`

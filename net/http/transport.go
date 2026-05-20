@@ -8,7 +8,6 @@ import (
 	kilntypes "github.com/kilnfi/go-utils/common/types"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	kilnnet "github.com/kilnfi/go-utils/net"
-
 	"golang.org/x/net/http2"
 )
 

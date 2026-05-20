@@ -1,12 +1,11 @@
 package hashicorp
 
 import (
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	cmdutils "github.com/kilnfi/go-utils/cmd/utils"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 var tlsFlag kilntls.FlagPrefixer
@@ -95,9 +94,9 @@ func VaultToken(v *viper.Viper, f *pflag.FlagSet) {
 }
 
 const (
-	vaultAuthGithubTokenFlag     = "vault-auth-github-token"
-	VaultAuthGithubTokenViperKey = "vault.auth.github-token"
-	vaultAuthGithubTokenEnv      = "VAULT_AUTH_GITHUB_TOKEN"
+	vaultAuthGithubTokenFlag     = "vault-auth-github-token" //nolint:gosec // configuration key name, not a credential value
+	VaultAuthGithubTokenViperKey = "vault.auth.github-token" //nolint:gosec // configuration key name, not a credential value
+	vaultAuthGithubTokenEnv      = "VAULT_AUTH_GITHUB_TOKEN" //nolint:gosec // configuration key name, not a credential value
 )
 
 func VaultAuthGitHubToken(v *viper.Viper, f *pflag.FlagSet) {

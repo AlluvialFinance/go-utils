@@ -9,7 +9,6 @@ import (
 
 func Flags(v *viper.Viper, f *pflag.FlagSet) {
 	EthELAddrFlag(v, f)
-
 }
 
 func ConfigFromViper(v *viper.Viper) *jsonrpchttp.Config {

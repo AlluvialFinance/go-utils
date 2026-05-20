@@ -1,10 +1,10 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
 )
 
@@ -22,7 +22,7 @@ func WithBeaconErrorUnlessOK() autorest.RespondDecorator {
 			if resp.StatusCode >= 400 {
 				msg, beaconErr := inspectError(resp)
 				if beaconErr == nil {
-					err = autorest.NewErrorWithError(msg, "eth2http", "WitBeaconErrorUnlessOK", resp, "Failure with beacon node error")
+					err = autorest.NewErrorWithError(msg, "eth2http", "WithBeaconErrorUnlessOK", resp, "Failure with beacon node error")
 				}
 			}
 

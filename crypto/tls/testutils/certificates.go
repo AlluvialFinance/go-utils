@@ -14,6 +14,7 @@ MAMBAf8wDQYJKoZIhvcNAQEFBQADQQBJlffJHybjDGxRMqaRmDhX0+6v02TUKZsW
 r5QuVbpQhH6u+0UgcW0jp9QwpxoPTLTWGXEWBBBurxFwiCBhkQ+V
 -----END CERTIFICATE-----
 `
+	//nolint:gosec // static test fixture key material
 	RSAKeyPEM = `-----BEGIN RSA PRIVATE KEY-----
 MIIBOwIBAAJBANLJhPHhITqQbPklG3ibCVxwGMRfp/v4XqhfdQHdcVfHap6NQ5Wo
 k/4xIA+ui35/MmNartNuC+BdZ1tMuVCPFZcCAwEAAQJAEJ2N+zsR0Xn8/Q6twa4G
@@ -48,6 +49,7 @@ H5jBImIxPL4WxQNiBTexAkF8D1EtpYuWdlVQ80/h/f4pBcGiXPqX5h2PQSQY7hP1
 +jwM1FGS4fREIOvlBYr/SzzQRtwrvrzGYxDEDbsC0ZGRnA==
 -----END CERTIFICATE-----
 `
+	//nolint:gosec // static test fixture key material
 	ECDSAKeyPEM = `-----BEGIN EC PARAMETERS-----
 BgUrgQQAIw==
 -----END EC PARAMETERS-----

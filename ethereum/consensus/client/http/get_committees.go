@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -5,9 +6,8 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	beaconcommon "github.com/protolambda/zrnt/eth2/beacon/common"
-
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
+	beaconcommon "github.com/protolambda/zrnt/eth2/beacon/common"
 )
 
 // GetCommittees returns the committees for the given state.
@@ -23,6 +23,9 @@ func (c *Client) getCommittees(ctx context.Context, stateID string, epoch *beaco
 	}
 
 	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetCommittees", resp, "Failure sending request")
 	}

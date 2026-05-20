@@ -1,3 +1,4 @@
+//revive:disable-next-line:package-directory-mismatch
 package httppreparer
 
 import (
@@ -26,7 +27,7 @@ func WithBaseURL(baseURL string) autorest.PrepareDecorator {
 				}
 				if u.RawQuery != "" {
 					// handle unencoded semicolons (ideally the server would send them already encoded)
-					u.RawQuery = strings.Replace(u.RawQuery, ";", "%3B", -1)
+					u.RawQuery = strings.ReplaceAll(u.RawQuery, ";", "%3B")
 					var q url.Values
 					q, err = url.ParseQuery(u.RawQuery)
 					if err != nil {

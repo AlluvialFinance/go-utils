@@ -1,5 +1,4 @@
 //go:build !integration
-// +build !integration
 
 package types
 
@@ -34,5 +33,4 @@ func TestValidatorUnmarshalMarshalCSV(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, record, record2)
 	})
-
 }

@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 )
 
@@ -13,8 +13,8 @@ func WriteJSON(rw http.ResponseWriter, statusCode int, data interface{}) error {
 }
 
 type ErrorRespMsg struct {
-	Message string `json:"message" example:"error message"`
-	Code    string `json:"status,omitempty" example:"IR001"`
+	Message string `example:"error message" json:"message"`
+	Code    string `example:"IR001"         json:"status,omitempty"`
 } // @name Error
 
 func WriteError(rw http.ResponseWriter, statusCode int, err error) {
@@ -25,7 +25,7 @@ func WriteError(rw http.ResponseWriter, statusCode int, err error) {
 
 func DecodeJSON(req *http.Request, obj interface{}) error {
 	if req == nil || req.Body == nil {
-		return fmt.Errorf("invalid request")
+		return errors.New("invalid request")
 	}
 	return json.NewDecoder(req.Body).Decode(obj)
 }

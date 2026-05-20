@@ -3,18 +3,20 @@ package app
 import (
 	"time"
 
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnnet "github.com/kilnfi/go-utils/net"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/pprof"
 )
 
 type Config struct {
 	Logger         *kilnlog.Config
 	Server         *kilnhttp.ServerConfig
 	Healthz        *kilnhttp.ServerConfig
-	StartTimeout   *types.Duration
-	StopTimeout    *types.Duration
+	PProf          *pprof.Config
+	StartTimeout   *common.Duration
+	StopTimeout    *common.Duration
 	LogMemoryUsage bool // Enable memory usage logging in HTTP middleware (for debugging)
 }
 
@@ -47,12 +49,23 @@ func (cfg *Config) SetDefault() *Config {
 	cfg.Healthz.SetDefault()
 
 	if cfg.StartTimeout == nil || cfg.StartTimeout.Duration == 0 {
-		cfg.StartTimeout = &types.Duration{Duration: 10 * time.Second}
+		cfg.StartTimeout = &common.Duration{Duration: 10 * time.Second}
 	}
 
 	if cfg.StopTimeout == nil || cfg.StopTimeout.Duration == 0 {
-		cfg.StopTimeout = &types.Duration{Duration: 10 * time.Second}
+		cfg.StopTimeout = &common.Duration{Duration: 10 * time.Second}
 	}
 
+	cfg.PProf.SetDefaults()
+
 	return cfg
+}
+
+// Validate checks that the configuration is valid.
+// Must be called after SetDefault.
+func (cfg *Config) Validate() error {
+	if err := cfg.PProf.Validate(); err != nil {
+		return err
+	}
+	return nil
 }

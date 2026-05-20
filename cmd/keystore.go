@@ -43,8 +43,8 @@ func NewCmdKeystore(
 	// Register flags
 	gethkeystore.Flags(v, cmds.PersistentFlags())
 
-	cmds.AddCommand(newCmdGenerateEth1Key(keystoreCtx))
-	cmds.AddCommand(newCmdImportEth1Key(keystoreCtx))
+	cmds.AddCommand(newCmdGenerateEth1Key(keystoreCtx)) //nolint:contextcheck // command runtime context is sourced from cmd.Context() inside RunE
+	cmds.AddCommand(newCmdImportEth1Key(keystoreCtx))   //nolint:contextcheck // command runtime context is sourced from cmd.Context() inside RunE
 
 	return cmds
 }
@@ -53,8 +53,12 @@ func newCmdGenerateEth1Key(ctx *keystoreContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate an Ethereum execution layer account",
-		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
-			return ctx.keys.CreateAccount(ctx)
+		RunE: utils.PrintJSON(func(cmd *cobra.Command, _ []string) (res interface{}, err error) {
+			reqCtx := cmd.Context()
+			if reqCtx == nil {
+				reqCtx = ctx
+			}
+			return ctx.keys.CreateAccount(reqCtx)
 		}),
 	}
 
@@ -62,15 +66,17 @@ func newCmdGenerateEth1Key(ctx *keystoreContext) *cobra.Command {
 }
 
 func newCmdImportEth1Key(ctx *keystoreContext) *cobra.Command {
-	var (
-		pkey string
-	)
+	var pkey string
 
 	cmd := &cobra.Command{
 		Use:   "import",
 		Short: "Import the given private key",
-		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
-			return ctx.keys.Import(ctx, pkey)
+		RunE: utils.PrintJSON(func(cmd *cobra.Command, _ []string) (res interface{}, err error) {
+			reqCtx := cmd.Context()
+			if reqCtx == nil {
+				reqCtx = ctx
+			}
+			return ctx.keys.Import(reqCtx, pkey)
 		}),
 	}
 

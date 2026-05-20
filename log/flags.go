@@ -3,10 +3,9 @@ package log
 import (
 	"fmt"
 
+	cmdutils "github.com/kilnfi/go-utils/cmd/utils"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
-	cmdutils "github.com/kilnfi/go-utils/cmd/utils"
 )
 
 func Flags(v *viper.Viper, f *pflag.FlagSet) {

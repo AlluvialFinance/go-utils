@@ -12,20 +12,21 @@ import (
 // Create a temporary DB scoped to the test scenario and returns the config to connect to it
 // temporary DB will be automically cleaned up after test
 func CreateTempDB(t *testing.T, cfg *Config) (*Config, error) {
-	conn, err := PGXConnect(context.TODO(), cfg)
+	t.Helper()
+	conn, err := PGXConnect(t.Context(), cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	name := sanitizeName(t.Name())
-	err = createDB(context.TODO(), conn, name)
+	err = createDB(t.Context(), conn, name)
 	if err != nil {
 		return nil, err
 	}
 
 	t.Cleanup(func() {
-		_ = dropDB(context.TODO(), conn, name)
-		conn.Close(context.TODO())
+		_ = dropDB(t.Context(), conn, name)
+		conn.Close(t.Context())
 	})
 
 	dbCfg := new(Config)

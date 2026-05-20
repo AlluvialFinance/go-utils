@@ -1,19 +1,20 @@
 //go:build !integration
-// +build !integration
 
+//revive:disable-next-line:package-directory-mismatch
 package jsonrpchttp
 
 import (
-	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	"github.com/kilnfi/go-utils/net/jsonrpc"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientImplementseth2Interface(t *testing.T) {
@@ -35,6 +36,7 @@ func TestCall(t *testing.T) {
 }
 
 func testCallStatusOKAndValidResult(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"2.0","method":"concat","params":["a","b","c"],"id":0}`)).
@@ -45,7 +47,7 @@ func testCallStatusOKAndValidResult(t *testing.T, c *Client, mockCli *httptestut
 
 	var res string
 	err := c.Call(
-		context.Background(),
+		t.Context(),
 		&jsonrpc.Request{
 			Version: "2.0",
 			Method:  "concat",
@@ -64,6 +66,7 @@ func testCallStatusOKAndValidResult(t *testing.T, c *Client, mockCli *httptestut
 }
 
 func testCallStatusOKAndError(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		JSON([]byte(`{"jsonrpc":"2.0","method":"concat","params":["a","b","c"],"id":0}`)).
@@ -74,7 +77,7 @@ func testCallStatusOKAndError(t *testing.T, c *Client, mockCli *httptestutils.Mo
 
 	var res string
 	err := c.Call(
-		context.Background(),
+		t.Context(),
 		&jsonrpc.Request{
 			Version: "2.0",
 			Method:  "concat",
@@ -86,17 +89,20 @@ func testCallStatusOKAndError(t *testing.T, c *Client, mockCli *httptestutils.Mo
 
 	require.Error(t, err)
 	require.IsType(t, autorest.DetailedError{}, err)
+	var detailedErr autorest.DetailedError
+	require.True(t, errors.As(err, &detailedErr))
 	assert.Equal(
 		t,
 		&jsonrpc.ErrorMsg{
 			Code:    -32000,
 			Message: "invalid test method",
 		},
-		err.(autorest.DetailedError).Original,
+		detailedErr.Original,
 	)
 }
 
 func testCallStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Post("/").
 		Reply(400)
@@ -105,7 +111,7 @@ func testCallStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSende
 
 	var res string
 	err := c.Call(
-		context.Background(),
+		t.Context(),
 		&jsonrpc.Request{
 			Version: "2.0",
 			Method:  "concat",
@@ -116,4 +122,42 @@ func testCallStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSende
 	)
 
 	require.Error(t, err)
+}
+
+func TestNewClient(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","result":"ok","id":0}`))
+	}))
+	defer srv.Close()
+
+	cfg := (&Config{Address: srv.URL}).SetDefault()
+	c, err := NewClient(cfg)
+	require.NoError(t, err)
+
+	var res string
+	err = c.Call(t.Context(), &jsonrpc.Request{Version: "2.0", Method: "test", ID: 0}, &res)
+	require.NoError(t, err)
+	assert.Equal(t, "ok", res)
+}
+
+func TestNewClientWithHeaders(t *testing.T) {
+	var receivedHeader string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedHeader = r.Header.Get("X-Api-Key")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","result":"ok","id":0}`))
+	}))
+	defer srv.Close()
+
+	cfg := (&Config{Address: srv.URL}).SetDefault().WithHeaders(map[string]string{
+		"X-Api-Key": "secret",
+	})
+	c, err := NewClient(cfg)
+	require.NoError(t, err)
+
+	var res string
+	err = c.Call(t.Context(), &jsonrpc.Request{Version: "2.0", Method: "test", ID: 0}, &res)
+	require.NoError(t, err)
+	assert.Equal(t, "secret", receivedHeader)
 }

@@ -1,5 +1,4 @@
 //go:build !integration
-// +build !integration
 
 package sql
 
@@ -10,13 +9,12 @@ import (
 	"time"
 
 	"github.com/jackc/pgconn"
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	rootPEM = `-----BEGIN CERTIFICATE-----
+var rootPEM = `-----BEGIN CERTIFICATE-----
 MIIB0zCCAX2gAwIBAgIJAI/M7BYjwB+uMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
 BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
 aWRnaXRzIFB0eSBMdGQwHhcNMTIwOTEyMjE1MjAyWhcNMTUwOTEyMjE1MjAyWjBF
@@ -29,7 +27,6 @@ MAMBAf8wDQYJKoZIhvcNAQEFBQADQQBJlffJHybjDGxRMqaRmDhX0+6v02TUKZsW
 r5QuVbpQhH6u+0UgcW0jp9QwpxoPTLTWGXEWBBBurxFwiCBhkQ+V
 -----END CERTIFICATE-----
 `
-)
 
 func TestDSN(t *testing.T) {
 	cfg := new(Config).SetDefault()
@@ -51,7 +48,7 @@ func TestDSN(t *testing.T) {
 		SSLCert:        "cert.pem",
 		SSLKey:         "key.pem",
 		SSLCA:          "ca.pem",
-		ConnectTimeout: &types.Duration{Duration: 120 * time.Second},
+		ConnectTimeout: &common.Duration{Duration: 120 * time.Second},
 	}
 
 	assert.Equal(
@@ -62,7 +59,7 @@ func TestDSN(t *testing.T) {
 
 	dir := t.TempDir()
 
-	err := os.WriteFile(path.Join(dir, "ca.pem"), []byte(rootPEM), 0o777)
+	err := os.WriteFile(path.Join(dir, "ca.pem"), []byte(rootPEM), 0o600)
 	require.NoError(t, err)
 
 	cfg = &Config{
@@ -76,7 +73,7 @@ func TestDSN(t *testing.T) {
 		// SSLCert:        "cert.pem",
 		// SSLKey:         "key.pem",
 		SSLCA:          path.Join(dir, "ca.pem"),
-		ConnectTimeout: &types.Duration{Duration: 120 * time.Second},
+		ConnectTimeout: &common.Duration{Duration: 120 * time.Second},
 	}
 
 	pgxCfg, err := pgconn.ParseConfig(cfg.DSN().String())

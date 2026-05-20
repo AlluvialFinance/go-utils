@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	types "github.com/kilnfi/go-utils/common/types"
+	common "github.com/kilnfi/go-utils/common/types"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	"github.com/sirupsen/logrus"
 )
@@ -15,7 +15,7 @@ type EntrypointConfig struct {
 	Network string `json:"network"`
 	Address string `json:"address"`
 
-	KeepAlive *types.Duration
+	KeepAlive *common.Duration
 
 	TLSConfig *kilntls.Config
 }
@@ -26,7 +26,7 @@ func (cfg *EntrypointConfig) SetDefault() *EntrypointConfig {
 	}
 
 	if cfg.KeepAlive == nil {
-		cfg.KeepAlive = &types.Duration{Duration: 90 * time.Second}
+		cfg.KeepAlive = &common.Duration{Duration: 90 * time.Second}
 	}
 
 	return cfg
@@ -81,7 +81,7 @@ func (lstnr *Entrypoint) Listen(ctx context.Context) (l net.Listener, err error)
 	l, err = lc.Listen(ctx, lstnr.cfg.Network, lstnr.cfg.Address)
 	if err != nil {
 		logger.WithError(err).Infof("error starting entrypoint")
-		return
+		return nil, err
 	}
 
 	if lstnr.cfg.TLSConfig != nil {

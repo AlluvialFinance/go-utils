@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -14,12 +14,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/hellofresh/health-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 	kilnlog "github.com/kilnfi/go-utils/log"
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
+	"github.com/kilnfi/go-utils/pprof"
+	"github.com/kilnfi/go-utils/tracing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -49,6 +50,8 @@ type App struct {
 	healthMux    *httprouter.Router
 	healthServer *kilnhttp.Server
 
+	pprofServer *pprof.Server
+
 	liveness  *health.Health
 	readiness *health.Health
 
@@ -70,6 +73,11 @@ type App struct {
 
 // New creates a new App
 func New(cfg *Config) (*App, error) {
+	// Validate config before any initialization
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	logger, err := kilnlog.New(cfg.Logger)
 	if err != nil {
 		return nil, err
@@ -90,20 +98,27 @@ func New(cfg *Config) (*App, error) {
 	liveness, _ := health.New()
 	readiness, _ := health.New()
 
-	return &App{
+	app := &App{
 		cfg:          cfg,
 		mux:          httprouter.New(),
 		middlewares:  alice.New(),
 		server:       server,
 		healthMux:    httprouter.New(),
 		healthServer: healthServer,
+		pprofServer:  pprof.NewServer(cfg.PProf, logger),
 		liveness:     liveness,
 		readiness:    readiness,
 		prometheus:   prometheus.NewRegistry(),
 		logger:       logger,
 		done:         make(chan os.Signal, 1),
 		shutdownCh:   make(chan ShutdownRequest, 1),
-	}, nil
+	}
+
+	if app.pprofServer != nil {
+		logger.WithField("address", cfg.PProf.Address).Warn("pprof server enabled - ensure this is a dev environment")
+	}
+
+	return app, nil
 }
 
 func (app *App) SetLogger(logger *logrus.Logger) {
@@ -152,11 +167,11 @@ func (app *App) registerBaseMetrics() {
 
 func (app *App) livecheck(context.Context) error {
 	if app.isStatus(statusInitErr) {
-		return fmt.Errorf("app initilalization failed")
+		return errors.New("app initialization failed")
 	}
 
 	if app.isStatus(statusStopped) {
-		return fmt.Errorf("app stopped")
+		return errors.New("app stopped")
 	}
 
 	return nil
@@ -164,19 +179,19 @@ func (app *App) livecheck(context.Context) error {
 
 func (app *App) readycheck(context.Context) error {
 	if app.isStatus("") {
-		return fmt.Errorf("app has not yet been started")
+		return errors.New("app has not yet been started")
 	}
 
 	if app.isStatus(statusInitializing) {
-		return fmt.Errorf("app is initializing")
+		return errors.New("app is initializing")
 	}
 
 	if app.isStatus(statusStarting) {
-		return fmt.Errorf("app is starting")
+		return errors.New("app is starting")
 	}
 
 	if app.isStatus(statusStopping) {
-		return fmt.Errorf("app is stopping")
+		return errors.New("app is stopping")
 	}
 
 	return nil
@@ -337,7 +352,7 @@ func (app *App) startServices(ctx context.Context) (err error) {
 	app.logger.Infof("services successfully started")
 	app.setStatus(statusRunning)
 
-	return
+	return nil
 }
 
 func (app *App) stopServices(ctx context.Context) error {
@@ -499,6 +514,7 @@ func (app *App) setHandler() {
 
 func (app *App) instrumentMiddleware() alice.Chain {
 	return alice.New(
+		tracing.Middleware,
 		app.loggerMiddleware,
 		app.requestMetricsMiddleware,
 	)
@@ -509,7 +525,97 @@ func (app *App) loggerMiddleware(h http.Handler) http.Handler {
 	if app.cfg.Logger.Format == "json" {
 		return app.jsonLoggingHandler(h)
 	}
-	return handlers.CombinedLoggingHandler(app.logger.Out, h)
+	return app.combinedLoggingHandlerWithTraceID(h)
+}
+
+// combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
+// with an additional trace_id field appended.
+// combinedLoggingHandlerWithTraceID returns a handler that logs requests in Apache Combined Log Format
+// with trace_id and optional memory stats appended.
+func (app *App) combinedLoggingHandlerWithTraceID(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Capture memory stats before the request if enabled
+		var memBefore runtime.MemStats
+		if app.cfg.LogMemoryUsage {
+			runtime.ReadMemStats(&memBefore)
+		}
+
+		// Wrap the response writer to capture status code and bytes written
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Call the next handler
+		h.ServeHTTP(wrapped, r)
+
+		// Write the log entry
+		app.writeApacheCombinedLog(wrapped, r, start, &memBefore)
+	})
+}
+
+// writeApacheCombinedLog writes a log entry in Apache Combined Log Format with trace ID, optional parent_trace_id, and optional memory stats.
+// Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" trace_id=%s [parent_trace_id=%s] [mem_stats...]
+func (app *App) writeApacheCombinedLog(wrapped *responseWriter, r *http.Request, start time.Time, memBefore *runtime.MemStats) {
+	traceID := tracing.GetTraceIDFromRequest(r)
+	parentTraceID := tracing.GetParentTraceIDFromRequest(r)
+
+	// Get username from request (basic auth)
+	username := "-"
+	if r.URL.User != nil {
+		if name := r.URL.User.Username(); name != "" {
+			username = name
+		}
+	}
+
+	// Get referer and user agent, defaulting to "-" if empty
+	referer := r.Referer()
+	if referer == "" {
+		referer = "-"
+	}
+	userAgent := r.UserAgent()
+	if userAgent == "" {
+		userAgent = "-"
+	}
+
+	// Get request host (client IP)
+	host := r.RemoteAddr
+
+	// Get request URI
+	uri := r.RequestURI
+	if uri == "" {
+		uri = r.URL.RequestURI()
+	}
+
+	// Calculate duration
+	durationMs := time.Since(start).Milliseconds()
+
+	fields := logrus.Fields{
+		"host":          host,
+		"username":      username,
+		"start_time":    start.Format("02/Jan/2006:15:04:05 -0700"),
+		"method":        r.Method,
+		"uri":           uri,
+		"proto":         r.Proto,
+		"status_code":   wrapped.statusCode,
+		"bytes_written": wrapped.bytesWritten,
+		"referer":       referer,
+		"user_agent":    userAgent,
+		"trace_id":      traceID,
+		"duration_ms":   durationMs,
+	}
+	if parentTraceID != "" {
+		fields["parent_trace_id"] = parentTraceID
+	}
+	if app.cfg.LogMemoryUsage {
+		var memAfter runtime.MemStats
+		runtime.ReadMemStats(&memAfter)
+		fields["mem_before_alloc_mb"] = bToMb(memBefore.Alloc)
+		fields["mem_after_alloc_mb"] = bToMb(memAfter.Alloc)
+		fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc)) //nolint:gosec // memory metrics are bounded and fit int64 in practice
+		fields["mem_after_heap_inuse_mb"] = bToMb(memAfter.HeapInuse)
+		fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
+	}
+	app.logger.WithFields(fields).Info()
 }
 
 func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
@@ -540,6 +646,14 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			"protocol":    r.Proto,
 		}
 
+		// Add trace ID and parent trace ID if present in context
+		if traceID := tracing.GetTraceIDFromRequest(r); traceID != "" {
+			fields[tracing.FieldTraceID] = traceID
+		}
+		if parentTraceID := tracing.GetParentTraceIDFromRequest(r); parentTraceID != "" {
+			fields[tracing.FieldParentTraceID] = parentTraceID
+		}
+
 		// Capture memory stats after the request and calculate deltas
 		if app.cfg.LogMemoryUsage {
 			var memAfter runtime.MemStats
@@ -557,9 +671,9 @@ func (app *App) jsonLoggingHandler(h http.Handler) http.Handler {
 			fields["mem_after_sys_mb"] = bToMb(memAfter.Sys)
 
 			// Delta stats (most important for identifying memory spikes)
-			fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))
-			fields["mem_delta_heap_alloc_mb"] = int64(bToMb(memAfter.HeapAlloc)) - int64(bToMb(memBefore.HeapAlloc))
-			fields["mem_delta_heap_inuse_mb"] = int64(bToMb(memAfter.HeapInuse)) - int64(bToMb(memBefore.HeapInuse))
+			fields["mem_delta_alloc_mb"] = int64(bToMb(memAfter.Alloc)) - int64(bToMb(memBefore.Alloc))              //nolint:gosec // memory metrics are bounded and fit int64 in practice
+			fields["mem_delta_heap_alloc_mb"] = int64(bToMb(memAfter.HeapAlloc)) - int64(bToMb(memBefore.HeapAlloc)) //nolint:gosec // memory metrics are bounded and fit int64 in practice
+			fields["mem_delta_heap_inuse_mb"] = int64(bToMb(memAfter.HeapInuse)) - int64(bToMb(memBefore.HeapInuse)) //nolint:gosec // memory metrics are bounded and fit int64 in practice
 		}
 
 		// Log the request in JSON format
@@ -601,7 +715,7 @@ func (rw *responseWriter) Flush() {
 func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	h, ok := rw.ResponseWriter.(http.Hijacker)
 	if !ok {
-		return nil, nil, fmt.Errorf("underlying ResponseWriter does not support hijacking")
+		return nil, nil, errors.New("underlying ResponseWriter does not support hijacking")
 	}
 	return h.Hijack()
 }
@@ -635,16 +749,27 @@ func (app *App) startSignalsAndServers(ctx context.Context) error {
 		return err
 	}
 
+	// Start pprof server (non-blocking, runs in goroutine)
+	app.pprofServer.Start()
+
 	return nil
 }
 
 func (app *App) stopSignalsAndServers(ctx context.Context) error {
 	app.stopListeningSignals()
+
+	// Stop pprof server first (if running)
+	pErr := app.pprofServer.Stop(ctx)
+
 	sErr := app.server.Stop(ctx)
 	hErr := app.healthServer.Stop(ctx)
+
+	// Return first error
+	if pErr != nil {
+		return pErr
+	}
 	if hErr != nil {
 		return hErr
 	}
-
 	return sErr
 }

@@ -1,10 +1,9 @@
 //go:build !integration
-// +build !integration
 
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
-	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -25,6 +24,7 @@ func TestGetSpec(t *testing.T) {
 }
 
 func testGetSpecStatusOK(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Get("/eth/v1/config/spec").
 		Reply(200).
@@ -34,7 +34,7 @@ func testGetSpecStatusOK(t *testing.T, c *Client, mockCli *httptestutils.MockSen
 
 	mockCli.EXPECT().Gock(req)
 
-	spec, err := c.GetSpec(context.Background())
+	spec, err := c.GetSpec(t.Context())
 
 	require.NoError(t, err)
 	assert.Equal(

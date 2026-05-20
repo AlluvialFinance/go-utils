@@ -1,20 +1,18 @@
 //go:build !integration
-// +build !integration
 
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
-	"context"
 	"testing"
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
+	"github.com/kilnfi/go-utils/ethereum/consensus/types"
+	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 	beaconcommon "github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/kilnfi/go-utils/ethereum/consensus/types"
-	httptestutils "github.com/kilnfi/go-utils/net/http/testutils"
 )
 
 func TestGetGenesis(t *testing.T) {
@@ -29,6 +27,7 @@ func TestGetGenesis(t *testing.T) {
 }
 
 func testGetGenesisStatusOK(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Get("/eth/v1/beacon/genesis").
 		Reply(200).
@@ -36,7 +35,7 @@ func testGetGenesisStatusOK(t *testing.T, c *Client, mockCli *httptestutils.Mock
 
 	mockCli.EXPECT().Gock(req)
 
-	genesis, err := c.GetGenesis(context.Background())
+	genesis, err := c.GetGenesis(t.Context())
 
 	require.NoError(t, err)
 	assert.Equal(
@@ -50,13 +49,14 @@ func testGetGenesisStatusOK(t *testing.T, c *Client, mockCli *httptestutils.Mock
 }
 
 func testGetGenesisStatus400(t *testing.T, c *Client, mockCli *httptestutils.MockSender) {
+	t.Helper()
 	req := httptestutils.NewGockRequest()
 	req.Get("/eth/v1/beacon/genesis").
 		Reply(400)
 
 	mockCli.EXPECT().Gock(req)
 
-	_, err := c.GetGenesis(context.Background())
+	_, err := c.GetGenesis(t.Context())
 
 	require.Error(t, err)
 }

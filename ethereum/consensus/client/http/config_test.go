@@ -1,6 +1,6 @@
 //go:build !integration
-// +build !integration
 
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -16,5 +16,11 @@ func TestConfig(t *testing.T) {
 		cfg.SetDefault()
 		assert.NotNil(t, cfg.HTTP)
 		assert.True(t, cfg.DisableLog)
+	})
+
+	t.Run("WithHeaders", func(t *testing.T) {
+		headers := map[string]string{"X-Api-Key": "secret"}
+		cfg := new(Config).SetDefault().WithHeaders(headers)
+		assert.Equal(t, headers, cfg.Headers)
 	})
 }

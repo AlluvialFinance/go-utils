@@ -42,17 +42,22 @@ func NewCmdEthEL(
 	// Register flags
 	execclient.EthELAddrFlag(v, cmds.PersistentFlags())
 
-	cmds.AddCommand(newCmdEthELChainID(ethELCtx))
-	cmds.AddCommand(newCmdEthELBlockNumber(ethELCtx))
+	cmds.AddCommand(newCmdEthELChainID(ethELCtx))     //nolint:contextcheck // command runtime context is sourced from cmd.Context() inside RunE
+	cmds.AddCommand(newCmdEthELBlockNumber(ethELCtx)) //nolint:contextcheck // command runtime context is sourced from cmd.Context() inside RunE
 
 	return cmds
 }
+
 func newCmdEthELChainID(ctx *ethELContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "chain-id",
 		Short: "Get execution layer chain ID",
-		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
-			return ctx.client.ChainID(ctx)
+		RunE: utils.PrintJSON(func(cmd *cobra.Command, _ []string) (res interface{}, err error) {
+			reqCtx := cmd.Context()
+			if reqCtx == nil {
+				reqCtx = ctx
+			}
+			return ctx.client.ChainID(reqCtx)
 		}),
 	}
 
@@ -63,8 +68,12 @@ func newCmdEthELBlockNumber(ctx *ethELContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocknumber",
 		Short: "Get execution layer chain's head number",
-		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
-			return ctx.client.BlockNumber(ctx)
+		RunE: utils.PrintJSON(func(cmd *cobra.Command, _ []string) (res interface{}, err error) {
+			reqCtx := cmd.Context()
+			if reqCtx == nil {
+				reqCtx = ctx
+			}
+			return ctx.client.BlockNumber(reqCtx)
 		}),
 	}
 

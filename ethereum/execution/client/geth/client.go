@@ -2,8 +2,10 @@ package geth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
+	"net/http"
 	"sync"
 
 	"github.com/ethereum/go-ethereum"
@@ -11,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/kilnfi/go-utils/ethereum/execution/client"
+	"github.com/kilnfi/go-utils/tracing"
 )
 
 // Ensure Client interface is fully implemented
@@ -21,6 +24,7 @@ type Client struct {
 	*ethclient.Client
 
 	address   string
+	headers   map[string]string
 	rpcclient *rpc.Client
 
 	chainID *big.Int
@@ -33,14 +37,39 @@ func NewClient(address string) *Client {
 	}
 }
 
-func (c *Client) Init(context.Context) error {
-	rpcClient, err := rpc.Dial(c.address)
+func NewClientWithHeaders(address string, headers map[string]string) *Client {
+	snapshot := make(map[string]string, len(headers))
+	for k, v := range headers {
+		snapshot[k] = v
+	}
+	return &Client{
+		address: address,
+		headers: snapshot,
+	}
+}
+
+func (c *Client) Init(ctx context.Context) error {
+	dialOpts := make([]rpc.ClientOption, 0, len(c.headers))
+	for key, value := range c.headers {
+		dialOpts = append(dialOpts, rpc.WithHeader(key, value))
+	}
+	rpcClient, err := rpc.DialOptions(ctx, c.address, dialOpts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect execution layer: %w", err)
 	}
 	c.rpcclient = rpcClient
 	c.Client = ethclient.NewClient(rpcClient)
 	return nil
+}
+
+// PrepareContextForOutbound adds the trace ID from ctx (if any) as X-Trace-ID so the next RPC request
+// sends it to the server (e.g. eth-proxy), allowing logs to be correlated.
+func (c *Client) PrepareContextForOutbound(ctx context.Context) context.Context {
+	traceID := tracing.GetTraceID(ctx)
+	if traceID == "" {
+		return ctx
+	}
+	return rpc.NewContextWithHeaders(ctx, http.Header{tracing.HeaderTraceID: []string{traceID}})
 }
 
 func (c *Client) ChainID(ctx context.Context) (*big.Int, error) {
@@ -69,8 +98,8 @@ func (c *Client) FilterLogs(ctx context.Context, query ethereum.FilterQuery) ([]
 		ErrorData() interface{}
 	}
 
-	jsonErr, ok := err.(jsonError)
-	if !ok {
+	var jsonErr jsonError
+	if !errors.As(err, &jsonErr) {
 		return logs, err
 	}
 

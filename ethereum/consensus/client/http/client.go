@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -6,10 +7,10 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/sirupsen/logrus"
-
 	kilnhttp "github.com/kilnfi/go-utils/net/http"
 	httppreparer "github.com/kilnfi/go-utils/net/http/preparer"
+	"github.com/kilnfi/go-utils/tracing"
+	"github.com/sirupsen/logrus"
 )
 
 var silentLog = &logrus.Logger{
@@ -39,10 +40,19 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
+	inspector := httppreparer.WithBaseURL(cfg.Address)
+	if len(cfg.Headers) > 0 {
+		base := inspector
+		headerDec := httppreparer.WithHeaders(cfg.Headers)
+		inspector = func(p autorest.Preparer) autorest.Preparer {
+			return headerDec(base(p))
+		}
+	}
+
 	c := NewClientFromClient(
 		autorest.Client{
 			Sender:           httpc,
-			RequestInspector: httppreparer.WithBaseURL(cfg.Address),
+			RequestInspector: inspector,
 		},
 	)
 
@@ -64,6 +74,9 @@ func (c *Client) SetLogger(logger logrus.FieldLogger) {
 
 func newRequest(ctx context.Context) *http.Request {
 	req, _ := http.NewRequestWithContext(ctx, "", "", http.NoBody)
+	if traceID := tracing.GetTraceID(ctx); traceID != "" {
+		req.Header.Set(tracing.HeaderTraceID, traceID)
+	}
 	return req
 }
 

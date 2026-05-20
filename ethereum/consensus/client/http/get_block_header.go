@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally reflects domain, not directory name
 package eth2http
 
 import (
@@ -5,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
-
 	"github.com/kilnfi/go-utils/ethereum/consensus/types"
 )
 
@@ -22,6 +22,9 @@ func (c *Client) getBlockHeader(ctx context.Context, blockID string) (*types.Bea
 	}
 
 	resp, err := c.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, autorest.NewErrorWithError(err, "eth2http.Client", "GetBlockHeader", resp, "Failure sending request")
 	}

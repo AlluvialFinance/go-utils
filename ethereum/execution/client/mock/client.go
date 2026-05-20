@@ -323,6 +323,20 @@ func (mr *MockClientMockRecorder) PendingTransactionCount(ctx interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PendingTransactionCount", reflect.TypeOf((*MockClient)(nil).PendingTransactionCount), ctx)
 }
 
+// PrepareContextForOutbound mocks base method.
+func (m *MockClient) PrepareContextForOutbound(ctx context.Context) context.Context {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PrepareContextForOutbound", ctx)
+	ret0, _ := ret[0].(context.Context)
+	return ret0
+}
+
+// PrepareContextForOutbound indicates an expected call of PrepareContextForOutbound.
+func (mr *MockClientMockRecorder) PrepareContextForOutbound(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareContextForOutbound", reflect.TypeOf((*MockClient)(nil).PrepareContextForOutbound), ctx)
+}
+
 // SendTransaction mocks base method.
 func (m *MockClient) SendTransaction(ctx context.Context, tx *types.Transaction) error {
 	m.ctrl.T.Helper()

@@ -42,4 +42,9 @@ type Client interface {
 	BlockNumber(ctx context.Context) (uint64, error)
 	ChainID(ctx context.Context) (*big.Int, error)
 	NetworkID(ctx context.Context) (*big.Int, error)
+
+	// PrepareContextForOutbound returns a context that carries the current trace ID as HTTP headers
+	// for outbound RPC (e.g. so X-Trace-ID is sent to eth-proxy). Call before passing ctx to any Client method.
+	// If the implementation does not support trace headers, it returns ctx unchanged.
+	PrepareContextForOutbound(ctx context.Context) context.Context
 }

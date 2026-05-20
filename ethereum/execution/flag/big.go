@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/kilnfi/go-utils/ethereum/execution/types"
-
 	"github.com/spf13/pflag"
 )
 

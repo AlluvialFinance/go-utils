@@ -42,7 +42,7 @@ func ParseVolumes(specs ...string) (volumes map[string]struct{}, binds []string,
 		}
 	}
 
-	return
+	return volumes, binds, err
 }
 
 // GetPortBindings returns the list of port binding to access container on given port

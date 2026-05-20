@@ -45,8 +45,8 @@ func NewCmdEthCL(
 	// Register flags
 	consclienthttp.Flags(v, cmds.PersistentFlags())
 
-	cmds.AddCommand(newCmdCLSpec(ethCLCtx))
-	cmds.AddCommand(newCmdCLGetValidator(ethCLCtx))
+	cmds.AddCommand(newCmdCLSpec(ethCLCtx))         //nolint:contextcheck // command runtime context is sourced from cmd.Context() inside RunE
+	cmds.AddCommand(newCmdCLGetValidator(ethCLCtx)) //nolint:contextcheck // command runtime context is sourced from cmd.Context() inside RunE
 
 	return cmds
 }
@@ -55,8 +55,12 @@ func newCmdCLSpec(ctx *ethCLContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-spec",
 		Short: "Print validator data",
-		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
-			return ctx.client.GetSpec(ctx)
+		RunE: utils.PrintJSON(func(cmd *cobra.Command, _ []string) (res interface{}, err error) {
+			reqCtx := cmd.Context()
+			if reqCtx == nil {
+				reqCtx = ctx
+			}
+			return ctx.client.GetSpec(reqCtx)
 		}),
 	}
 
@@ -71,8 +75,12 @@ func newCmdCLGetValidator(ctx *ethCLContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-validator",
 		Short: "Print validator data",
-		RunE: utils.PrintJSON(func(*cobra.Command, []string) (res interface{}, err error) {
-			return ctx.client.GetValidator(ctx, slot.String(), validatorID)
+		RunE: utils.PrintJSON(func(cmd *cobra.Command, _ []string) (res interface{}, err error) {
+			reqCtx := cmd.Context()
+			if reqCtx == nil {
+				reqCtx = ctx
+			}
+			return ctx.client.GetValidator(reqCtx, slot.String(), validatorID)
 		}),
 	}
 

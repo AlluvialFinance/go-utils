@@ -1,5 +1,4 @@
 //go:build !integration
-// +build !integration
 
 package jsonrpc
 
@@ -18,12 +17,14 @@ func TestMarshalRequest(t *testing.T) {
 }
 
 func testMarshalRequest(t *testing.T, expected []byte, req *Request) {
+	t.Helper()
 	b, err := json.Marshal(req)
 	require.NoError(t, err)
 	assert.Equal(t, expected, b)
 }
 
 func testMarshalRequestWithAllFields(t *testing.T) {
+	t.Helper()
 	req := &Request{
 		Version: "2.0",
 		Method:  "test-method",
@@ -35,12 +36,14 @@ func testMarshalRequestWithAllFields(t *testing.T) {
 }
 
 func testMarshalRequestWithEmptyFields(t *testing.T) {
+	t.Helper()
 	req := &Request{}
 	expected := []byte(`{"jsonrpc":"","method":"","params":null,"id":null}`)
 	testMarshalRequest(t, expected, req)
 }
 
 func testMarshalRequestWithInterfaceSliceParams(t *testing.T) {
+	t.Helper()
 	req := &Request{
 		Params: []interface{}{"test-param", 4},
 	}

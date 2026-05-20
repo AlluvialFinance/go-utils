@@ -3,6 +3,7 @@ package staking
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	ethcl "github.com/kilnfi/go-utils/ethereum/consensus"
@@ -33,7 +34,7 @@ func (data *DepositData) Sign(
 		}
 		data.Pubkey = *pubKey
 	} else if "0x"+hex.EncodeToString(vkey.PrivKey.PublicKey().Marshal()) != data.Pubkey.String() {
-		return nil, fmt.Errorf("signing keys does not match data public key")
+		return nil, errors.New("signing keys does not match data public key")
 	}
 
 	// Sign DepositMessage root
@@ -107,8 +108,8 @@ func (data *DepositData) MarshalJSON() ([]byte, error) {
 		Signature:             data.Signature,
 		Version:               data.Version,
 		Network:               data.Network(),
-		DepositMessageRoot:    data.DepositData.MessageRoot(),
-		DepositDataRoot:       data.DepositData.HashTreeRoot(tree.GetHashFn()),
+		DepositMessageRoot:    data.MessageRoot(),
+		DepositDataRoot:       data.HashTreeRoot(tree.GetHashFn()),
 	}
 
 	return json.Marshal(d)
@@ -129,11 +130,11 @@ func (data *DepositData) UnmarshalJSON(b []byte) error {
 
 	// Validates `deposit_message_root` and `deposit_data_root`
 	if (d.DepositMessageRoot != beaconcommon.Root{}) && (d.DepositMessageRoot != data.MessageRoot()) {
-		return fmt.Errorf("invalid `deposit_message_root` for `deposit_data`")
+		return errors.New("invalid `deposit_message_root` for `deposit_data`")
 	}
 
 	if (d.DepositDataRoot != beaconcommon.Root{}) && (d.DepositDataRoot != data.HashTreeRoot(tree.GetHashFn())) {
-		return fmt.Errorf("invalid `deposit_data_root` for `deposit_data`")
+		return errors.New("invalid `deposit_data_root` for `deposit_data`")
 	}
 
 	return nil
