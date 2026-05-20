@@ -9,14 +9,14 @@ import (
 )
 
 func TestInitTracing_NoOpWhenEndpointEmpty(t *testing.T) {
-	shutdown, err := InitTracing(context.Background(), TracingConfig{}, nil)
+	shutdown, err := InitTracing(t.Context(), TracingConfig{}, nil)
 	if err != nil {
 		t.Fatalf("expected no error with empty endpoint, got %v", err)
 	}
 	if shutdown == nil {
 		t.Fatal("expected non-nil shutdown function")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
 	defer cancel()
 	if err := shutdown(ctx); err != nil {
 		t.Fatalf("no-op shutdown returned error: %v", err)
@@ -24,7 +24,7 @@ func TestInitTracing_NoOpWhenEndpointEmpty(t *testing.T) {
 }
 
 func TestInitTracing_RequiresServiceName(t *testing.T) {
-	_, err := InitTracing(context.Background(), TracingConfig{Endpoint: "localhost:4317"}, nil)
+	_, err := InitTracing(t.Context(), TracingConfig{Endpoint: "localhost:4317"}, nil)
 	if err == nil {
 		t.Fatal("expected error when ServiceName is missing")
 	}
@@ -32,7 +32,7 @@ func TestInitTracing_RequiresServiceName(t *testing.T) {
 
 func TestInitTracingFromEnv_NoOpWhenEndpointEnvUnset(t *testing.T) {
 	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
-	shutdown, err := InitTracingFromEnv(context.Background(), TracingConfig{ServiceName: "test"}, nil)
+	shutdown, err := InitTracingFromEnv(t.Context(), TracingConfig{ServiceName: "test"}, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
