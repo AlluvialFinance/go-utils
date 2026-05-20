@@ -158,11 +158,25 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger *logrus.Logger) 
 //   - OTEL_TRACES_SAMPLER_ARG       — float in [0, 1] for sampling ratio.
 //     Invalid values keep the default and emit a warning when logger is non-nil.
 func InitTracingFromEnv(ctx context.Context, defaults TracingConfig, logger *logrus.Logger) (shutdown func(context.Context) error, err error) {
+	cfg, enabled := tracingConfigFromEnv(defaults, logger)
+	if !enabled {
+		return func(context.Context) error { return nil }, nil
+	}
+	return InitTracing(ctx, cfg, logger)
+}
+
+// tracingConfigFromEnv applies the OTEL_EXPORTER_OTLP_* env vars on top of
+// defaults and returns the resolved config plus whether tracing should be
+// initialized at all (false when OTEL_EXPORTER_OTLP_ENDPOINT is unset).
+//
+// Split from InitTracingFromEnv so tests can assert the env-to-config
+// transform in isolation without standing up a real exporter.
+func tracingConfigFromEnv(defaults TracingConfig, logger *logrus.Logger) (TracingConfig, bool) {
 	cfg := defaults
 
 	endpoint := strings.TrimSpace(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
 	if endpoint == "" {
-		return func(context.Context) error { return nil }, nil
+		return cfg, false
 	}
 	// Tolerate a URL-form endpoint. The OTLP gRPC dial wants host:port, so
 	// strip an optional scheme and any trailing path/query.
@@ -200,5 +214,5 @@ func InitTracingFromEnv(ctx context.Context, defaults TracingConfig, logger *log
 		}
 	}
 
-	return InitTracing(ctx, cfg, logger)
+	return cfg, true
 }
