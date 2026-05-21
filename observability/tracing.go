@@ -31,7 +31,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -86,7 +85,7 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger *logrus.Logger) 
 		opts = append(opts, otlptracegrpc.WithInsecure())
 	}
 
-	exporter, err := otlptrace.New(ctx, otlptracegrpc.NewClient(opts...))
+	exporter, err := otlptracegrpc.New(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("create OTLP trace exporter: %w", err)
 	}
@@ -106,7 +105,21 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger *logrus.Logger) 
 		attrs = append(attrs, semconv.ServiceInstanceID(hostname))
 	}
 
-	res, err := resource.New(ctx, resource.WithAttributes(attrs...))
+	// Compose the Resource with the SDK's standard detectors plus our explicit
+	// attributes. resource.New does NOT auto-include detectors — each one must
+	// be opted into. Order matters: detectors run first so our explicit
+	// WithAttributes wins on conflicting keys (e.g. ServiceName overrides any
+	// OTEL_SERVICE_NAME that WithFromEnv picked up).
+	res, err := resource.New(ctx,
+		resource.WithSchemaURL(semconv.SchemaURL),
+		resource.WithTelemetrySDK(), // telemetry.sdk.{name,language,version}
+		resource.WithProcess(),      // process.{pid,executable,command,...}
+		resource.WithOS(),           // os.{type,description,...}
+		resource.WithHost(),         // host.{name,id,...}
+		resource.WithContainer(),    // container.id (k8s)
+		resource.WithFromEnv(),      // OTEL_RESOURCE_ATTRIBUTES (operator-supplied tags)
+		resource.WithAttributes(attrs...),
+	)
 	// resource.New can return ErrPartialResource together with a usable
 	// resource — that happens when a built-in detector is unavailable but
 	// the explicit attributes were still applied. Treat that as a warning,
