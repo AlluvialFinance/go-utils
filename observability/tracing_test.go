@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func TestInitTracing_NoOpWhenEndpointEmpty(t *testing.T) {
@@ -28,6 +30,40 @@ func TestInitTracing_RequiresServiceName(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when ServiceName is missing")
 	}
+}
+
+func TestInitTracing_HappyPath_RegistersTracerProvider(t *testing.T) {
+	// Save and restore the global TracerProvider — InitTracing mutates global
+	// state and we don't want test leakage.
+	prev := otel.GetTracerProvider()
+	t.Cleanup(func() { otel.SetTracerProvider(prev) })
+
+	// Use a bogus port so we don't actually try to push spans anywhere. The
+	// OTLP gRPC client uses lazy-dial, so construction succeeds even if no
+	// collector is listening.
+	shutdown, err := InitTracing(t.Context(), TracingConfig{
+		Endpoint:    "localhost:14317",
+		Insecure:    true,
+		ServiceName: "happy-path-test",
+	}, nil)
+	if err != nil {
+		t.Fatalf("InitTracing returned error: %v", err)
+	}
+	if shutdown == nil {
+		t.Fatal("expected non-nil shutdown")
+	}
+
+	// The global TracerProvider should now be an SDK TracerProvider, not the
+	// SDK's default no-op.
+	if _, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider); !ok {
+		t.Fatalf("expected *sdktrace.TracerProvider, got %T", otel.GetTracerProvider())
+	}
+
+	// Shutdown is idempotent and bounded; allow it to error if the bogus dial
+	// can't reach a collector — we only care that it returns.
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Second)
+	defer cancel()
+	_ = shutdown(ctx)
 }
 
 func TestInitTracingFromEnv_NoOpWhenEndpointEnvUnset(t *testing.T) {
@@ -112,13 +148,23 @@ func TestTracingConfigFromEnv(t *testing.T) {
 			enabled:  true,
 		},
 		{
-			name: "invalid OTEL_EXPORTER_OTLP_INSECURE keeps scheme-inferred value",
+			name: "invalid OTEL_EXPORTER_OTLP_INSECURE falls back to scheme heuristic",
 			env: map[string]string{
 				"OTEL_EXPORTER_OTLP_ENDPOINT": "alloy:4317",
 				"OTEL_EXPORTER_OTLP_INSECURE": "not-a-bool",
 			},
 			defaults: TracingConfig{ServiceName: "svc"},
-			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: false, ServiceName: "svc"}, // explicit invalid → default false, not the scheme heuristic
+			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc"}, // alloy:4317 has no https:// scheme → insecure=true
+			enabled:  true,
+		},
+		{
+			name: "invalid OTEL_EXPORTER_OTLP_INSECURE with https endpoint stays secure",
+			env: map[string]string{
+				"OTEL_EXPORTER_OTLP_ENDPOINT": "https://collector:4317",
+				"OTEL_EXPORTER_OTLP_INSECURE": "not-a-bool",
+			},
+			defaults: TracingConfig{ServiceName: "svc"},
+			want:     TracingConfig{Endpoint: "collector:4317", Insecure: false, ServiceName: "svc"},
 			enabled:  true,
 		},
 	}

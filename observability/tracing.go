@@ -72,7 +72,11 @@ type TracingConfig struct {
 //
 // The returned shutdown function MUST be called on process exit (typically
 // via defer with a bounded context) to flush buffered spans.
-func InitTracing(ctx context.Context, cfg TracingConfig, logger *logrus.Logger) (shutdown func(context.Context) error, err error) {
+//
+// logger is optional (pass nil to silence warnings). It's typed as the
+// FieldLogger interface so callers can pass either a *logrus.Logger or a
+// wrapping entry without ceremony.
+func InitTracing(ctx context.Context, cfg TracingConfig, logger logrus.FieldLogger) (shutdown func(context.Context) error, err error) {
 	if cfg.Endpoint == "" {
 		return func(context.Context) error { return nil }, nil
 	}
@@ -110,8 +114,12 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger *logrus.Logger) 
 	// be opted into. Order matters: detectors run first so our explicit
 	// WithAttributes wins on conflicting keys (e.g. ServiceName overrides any
 	// OTEL_SERVICE_NAME that WithFromEnv picked up).
+	//
+	// We deliberately don't pass WithSchemaURL: the SDK's detectors emit a
+	// schema URL of their own (a newer semconv version than our import) and
+	// declaring our own URL triggers a conflict on merge. The semconv helper
+	// functions still encode the correct attribute keys without it.
 	res, err := resource.New(ctx,
-		resource.WithSchemaURL(semconv.SchemaURL),
 		resource.WithTelemetrySDK(), // telemetry.sdk.{name,language,version}
 		resource.WithProcess(),      // process.{pid,executable,command,...}
 		resource.WithOS(),           // os.{type,description,...}
@@ -170,7 +178,7 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger *logrus.Logger) 
 //   - OTEL_DEPLOYMENT_ENVIRONMENT   — overrides defaults.Environment.
 //   - OTEL_TRACES_SAMPLER_ARG       — float in [0, 1] for sampling ratio.
 //     Invalid values keep the default and emit a warning when logger is non-nil.
-func InitTracingFromEnv(ctx context.Context, defaults TracingConfig, logger *logrus.Logger) (shutdown func(context.Context) error, err error) {
+func InitTracingFromEnv(ctx context.Context, defaults TracingConfig, logger logrus.FieldLogger) (shutdown func(context.Context) error, err error) {
 	cfg, enabled := tracingConfigFromEnv(defaults, logger)
 	if !enabled {
 		return func(context.Context) error { return nil }, nil
@@ -184,7 +192,7 @@ func InitTracingFromEnv(ctx context.Context, defaults TracingConfig, logger *log
 //
 // Split from InitTracingFromEnv so tests can assert the env-to-config
 // transform in isolation without standing up a real exporter.
-func tracingConfigFromEnv(defaults TracingConfig, logger *logrus.Logger) (TracingConfig, bool) {
+func tracingConfigFromEnv(defaults TracingConfig, logger logrus.FieldLogger) (TracingConfig, bool) {
 	cfg := defaults
 
 	endpoint := strings.TrimSpace(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
@@ -200,17 +208,18 @@ func tracingConfigFromEnv(defaults TracingConfig, logger *logrus.Logger) (Tracin
 	}
 	cfg.Endpoint = endpoint
 
-	// OTEL_EXPORTER_OTLP_INSECURE takes precedence over the scheme heuristic
-	// when explicitly set (per the OTel env-var spec). Otherwise infer from
-	// the scheme: https:// → secure, anything else → insecure.
+	// Start from the scheme heuristic (https:// → secure, anything else →
+	// insecure) so a malformed OTEL_EXPORTER_OTLP_INSECURE doesn't silently
+	// leave TLS on against an in-cluster plain HTTP/2 target. The env var
+	// then takes precedence when explicitly set to a valid bool, per the OTel
+	// env-var spec.
+	cfg.Insecure = !hasHTTPSScheme
 	if v := strings.TrimSpace(os.Getenv("OTEL_EXPORTER_OTLP_INSECURE")); v != "" {
 		if b, perr := strconv.ParseBool(v); perr == nil {
 			cfg.Insecure = b
 		} else if logger != nil {
-			logger.WithField("value", v).Warn("observability: invalid OTEL_EXPORTER_OTLP_INSECURE; ignoring")
+			logger.WithField("value", v).Warn("observability: invalid OTEL_EXPORTER_OTLP_INSECURE; falling back to scheme heuristic")
 		}
-	} else {
-		cfg.Insecure = !hasHTTPSScheme
 	}
 
 	if v := strings.TrimSpace(os.Getenv("OTEL_SERVICE_NAME")); v != "" {
