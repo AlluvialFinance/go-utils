@@ -61,10 +61,41 @@ type TracingConfig struct {
 	// fills it from os.Hostname() and falls back to omitting the attribute
 	// if that also fails.
 	InstanceID string
-	// SamplerRatio configures the ParentBased(TraceIDRatioBased) sampler. A
-	// value <= 0 or >= 1 selects AlwaysSample. Parent-sampled spans always
-	// propagate regardless of this ratio.
-	SamplerRatio float64
+	// SamplerRatio configures the ParentBased sampler that decides whether
+	// root spans are recorded. Follows OTel spec semantics:
+	//   - nil       → AlwaysSample (default — unconfigured tracing samples
+	//                 everything so misconfiguration produces visible signal)
+	//   - 0.0       → NeverSample
+	//   - 1.0       → AlwaysSample
+	//   - 0 < r < 1 → TraceIDRatioBased(r) (sample that fraction)
+	//   - negative  → ignored, treated as nil (AlwaysSample)
+	//
+	// Parent-sampled spans always propagate regardless of this value.
+	//
+	// Use the Ratio helper to set a literal inline:
+	//
+	//   cfg := TracingConfig{SamplerRatio: observability.Ratio(0.1)}
+	SamplerRatio *float64
+}
+
+// Ratio returns a pointer to the supplied float64, intended for setting
+// TracingConfig.SamplerRatio inline. Go doesn't allow &0.1 directly, so this
+// avoids the usual var-then-take-address ceremony.
+func Ratio(v float64) *float64 { return &v }
+
+// selectSampler resolves a SamplerRatio pointer to a concrete OTel sampler
+// per the semantics documented on TracingConfig.SamplerRatio.
+func selectSampler(ratio *float64) sdktrace.Sampler {
+	switch {
+	case ratio == nil, *ratio < 0:
+		return sdktrace.AlwaysSample()
+	case *ratio <= 0:
+		return sdktrace.NeverSample()
+	case *ratio >= 1.0:
+		return sdktrace.AlwaysSample()
+	default:
+		return sdktrace.TraceIDRatioBased(*ratio)
+	}
 }
 
 // InitTracing registers a global OTel TracerProvider that exports spans over
@@ -144,10 +175,7 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger logrus.FieldLogg
 		return nil, fmt.Errorf("build OTel resource: %w", err)
 	}
 
-	sampler := sdktrace.AlwaysSample()
-	if cfg.SamplerRatio > 0 && cfg.SamplerRatio < 1.0 {
-		sampler = sdktrace.TraceIDRatioBased(cfg.SamplerRatio)
-	}
+	sampler := selectSampler(cfg.SamplerRatio)
 
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
@@ -176,8 +204,10 @@ func InitTracing(ctx context.Context, cfg TracingConfig, logger logrus.FieldLogg
 //     scheme of the endpoint decides (https:// → secure, otherwise insecure).
 //   - OTEL_SERVICE_NAME             — overrides defaults.ServiceName.
 //   - OTEL_DEPLOYMENT_ENVIRONMENT   — overrides defaults.Environment.
-//   - OTEL_TRACES_SAMPLER_ARG       — float in [0, 1] for sampling ratio.
-//     Invalid values keep the default and emit a warning when logger is non-nil.
+//   - OTEL_TRACES_SAMPLER_ARG       — float in [0, 1] for sampling ratio. 0
+//     selects NeverSample, 1 AlwaysSample, fractional values are passed to
+//     TraceIDRatioBased. Invalid values keep the caller's default and emit a
+//     warning when logger is non-nil.
 func InitTracingFromEnv(ctx context.Context, defaults TracingConfig, logger logrus.FieldLogger) (shutdown func(context.Context) error, err error) {
 	cfg, enabled := tracingConfigFromEnv(defaults, logger)
 	if !enabled {
@@ -230,7 +260,7 @@ func tracingConfigFromEnv(defaults TracingConfig, logger logrus.FieldLogger) (Tr
 	}
 	if v := strings.TrimSpace(os.Getenv("OTEL_TRACES_SAMPLER_ARG")); v != "" {
 		if ratio, perr := strconv.ParseFloat(v, 64); perr == nil {
-			cfg.SamplerRatio = ratio
+			cfg.SamplerRatio = &ratio
 		} else if logger != nil {
 			logger.WithField("value", v).Warn("observability: invalid OTEL_TRACES_SAMPLER_ARG; keeping default sampler")
 		}

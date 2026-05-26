@@ -2,6 +2,8 @@ package observability
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -9,6 +11,13 @@ import (
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
+
+func derefRatio(p *float64) string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("%v", *p)
+}
 
 func TestInitTracing_NoOpWhenEndpointEmpty(t *testing.T) {
 	shutdown, err := InitTracing(t.Context(), TracingConfig{}, nil)
@@ -66,6 +75,29 @@ func TestInitTracing_HappyPath_RegistersTracerProvider(t *testing.T) {
 	_ = shutdown(ctx)
 }
 
+func TestSelectSampler(t *testing.T) {
+	cases := []struct {
+		name  string
+		ratio *float64
+		want  string // sampler.Description()
+	}{
+		{"nil → AlwaysSample (safe default)", nil, "AlwaysOnSampler"},
+		{"explicit 0 → NeverSample (OTel spec)", Ratio(0), "AlwaysOffSampler"},
+		{"explicit 1 → AlwaysSample", Ratio(1.0), "AlwaysOnSampler"},
+		{"fractional 0.5 → TraceIDRatioBased", Ratio(0.5), "TraceIDRatioBased{0.5}"},
+		{"negative → AlwaysSample (treated as invalid)", Ratio(-1.0), "AlwaysOnSampler"},
+		{">1 → AlwaysSample (saturated)", Ratio(1.5), "AlwaysOnSampler"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := selectSampler(tc.ratio).Description()
+			if got != tc.want {
+				t.Fatalf("want %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestInitTracingFromEnv_NoOpWhenEndpointEnvUnset(t *testing.T) {
 	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
 	shutdown, err := InitTracingFromEnv(t.Context(), TracingConfig{ServiceName: "test"}, nil)
@@ -88,8 +120,8 @@ func TestTracingConfigFromEnv(t *testing.T) {
 		{
 			name:     "endpoint unset → disabled, defaults preserved",
 			env:      map[string]string{},
-			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: 0.5},
-			want:     TracingConfig{ServiceName: "svc", SamplerRatio: 0.5},
+			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: Ratio(0.5)},
+			want:     TracingConfig{ServiceName: "svc", SamplerRatio: Ratio(0.5)},
 			enabled:  false,
 		},
 		{
@@ -134,7 +166,17 @@ func TestTracingConfigFromEnv(t *testing.T) {
 				"OTEL_TRACES_SAMPLER_ARG":     "0.25",
 			},
 			defaults: TracingConfig{ServiceName: "svc"},
-			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: 0.25},
+			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: Ratio(0.25)},
+			enabled:  true,
+		},
+		{
+			name: "OTEL_TRACES_SAMPLER_ARG=0 → explicit NeverSample (pointer set to 0)",
+			env: map[string]string{
+				"OTEL_EXPORTER_OTLP_ENDPOINT": "alloy:4317",
+				"OTEL_TRACES_SAMPLER_ARG":     "0",
+			},
+			defaults: TracingConfig{ServiceName: "svc"},
+			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: Ratio(0)},
 			enabled:  true,
 		},
 		{
@@ -143,8 +185,8 @@ func TestTracingConfigFromEnv(t *testing.T) {
 				"OTEL_EXPORTER_OTLP_ENDPOINT": "alloy:4317",
 				"OTEL_TRACES_SAMPLER_ARG":     "0,25", // comma typo
 			},
-			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: 1.0},
-			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: 1.0},
+			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: Ratio(1.0)},
+			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: Ratio(1.0)},
 			enabled:  true,
 		},
 		{
@@ -192,8 +234,10 @@ func TestTracingConfigFromEnv(t *testing.T) {
 			if enabled != tc.enabled {
 				t.Fatalf("enabled: want %v, got %v", tc.enabled, enabled)
 			}
-			if got != tc.want {
-				t.Fatalf("config mismatch:\n  want: %+v\n  got:  %+v", tc.want, got)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("config mismatch:\n  want: %+v (ratio=%v)\n  got:  %+v (ratio=%v)",
+					tc.want, derefRatio(tc.want.SamplerRatio),
+					got, derefRatio(got.SamplerRatio))
 			}
 		})
 	}
