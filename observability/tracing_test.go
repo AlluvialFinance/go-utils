@@ -107,6 +107,11 @@ func TestInitTracingFromEnv_NoOpWhenEndpointEnvUnset(t *testing.T) {
 	if shutdown == nil {
 		t.Fatal("expected non-nil shutdown function")
 	}
+	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
+	defer cancel()
+	if err := shutdown(ctx); err != nil {
+		t.Fatalf("no-op shutdown returned error: %v", err)
+	}
 }
 
 func TestTracingConfigFromEnv(t *testing.T) {
@@ -187,6 +192,26 @@ func TestTracingConfigFromEnv(t *testing.T) {
 			},
 			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: Ratio(1.0)},
 			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: Ratio(1.0)},
+			enabled:  true,
+		},
+		{
+			name: "out-of-range OTEL_TRACES_SAMPLER_ARG keeps default ratio (negative)",
+			env: map[string]string{
+				"OTEL_EXPORTER_OTLP_ENDPOINT": "alloy:4317",
+				"OTEL_TRACES_SAMPLER_ARG":     "-1", // parses but not in [0, 1]
+			},
+			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: Ratio(0.5)},
+			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: Ratio(0.5)},
+			enabled:  true,
+		},
+		{
+			name: "out-of-range OTEL_TRACES_SAMPLER_ARG keeps default ratio (greater than 1)",
+			env: map[string]string{
+				"OTEL_EXPORTER_OTLP_ENDPOINT": "alloy:4317",
+				"OTEL_TRACES_SAMPLER_ARG":     "2.5",
+			},
+			defaults: TracingConfig{ServiceName: "svc", SamplerRatio: Ratio(0.5)},
+			want:     TracingConfig{Endpoint: "alloy:4317", Insecure: true, ServiceName: "svc", SamplerRatio: Ratio(0.5)},
 			enabled:  true,
 		},
 		{

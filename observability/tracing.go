@@ -259,10 +259,13 @@ func tracingConfigFromEnv(defaults TracingConfig, logger logrus.FieldLogger) (Tr
 		cfg.Environment = v
 	}
 	if v := strings.TrimSpace(os.Getenv("OTEL_TRACES_SAMPLER_ARG")); v != "" {
-		if ratio, perr := strconv.ParseFloat(v, 64); perr == nil {
+		// Accept only values in [0, 1] per the OTel spec for traceidratio.
+		// Out-of-range numerics (e.g. "-1", "2") would otherwise silently
+		// saturate to AlwaysSample, masking misconfiguration.
+		if ratio, perr := strconv.ParseFloat(v, 64); perr == nil && ratio >= 0 && ratio <= 1 {
 			cfg.SamplerRatio = &ratio
 		} else if logger != nil {
-			logger.WithField("value", v).Warn("observability: invalid OTEL_TRACES_SAMPLER_ARG; keeping default sampler")
+			logger.WithField("value", v).Warn("observability: invalid OTEL_TRACES_SAMPLER_ARG (must be in [0,1]); keeping default sampler")
 		}
 	}
 
