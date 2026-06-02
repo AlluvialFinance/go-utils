@@ -1,0 +1,4 @@
+* @AlluvialFinance/backend
+
+# CODEOWNERS itself can only be approved by these two individuals
+/.github/CODEOWNERS @mischat-galaxy @mehdi-glxy
