@@ -66,6 +66,49 @@ func TestInitProfiling_HappyPath_StartsAndStops(t *testing.T) {
 	_ = stop(ctx)
 }
 
+func TestInitProfiling_StopIsIdempotent(t *testing.T) {
+	// The SDK's uploader Stop closes its done channel unguarded, so a second
+	// call panics unless we guard it. Callers reasonably defer stop and may
+	// also call it explicitly on a shutdown path.
+	stop, err := InitProfiling(t.Context(), ProfilingConfig{
+		ServerAddress: "http://127.0.0.1:1",
+		ServiceName:   "idempotent-stop-test",
+		ProfileTypes:  []pyroscope.ProfileType{pyroscope.ProfileAllocSpace},
+	}, nil)
+	if err != nil {
+		t.Fatalf("InitProfiling returned error: %v", err)
+	}
+	_ = stop(t.Context())
+	_ = stop(t.Context()) // must not panic
+}
+
+func TestInitProfiling_DoesNotMutateCallerProfileTypes(t *testing.T) {
+	// A caller-supplied slice with spare capacity must not be appended into:
+	// the profiler would share its backing array and the caller could
+	// overwrite the live profile set.
+	callerTypes := make([]pyroscope.ProfileType, 1, 8)
+	callerTypes[0] = pyroscope.ProfileAllocSpace
+
+	stop, err := InitProfiling(t.Context(), ProfilingConfig{
+		ServerAddress:        "http://127.0.0.1:1",
+		ServiceName:          "no-mutate-test",
+		ProfileTypes:         callerTypes,
+		MutexProfileFraction: 5,
+	}, nil)
+	if err != nil {
+		t.Fatalf("InitProfiling returned error: %v", err)
+	}
+	defer func() { _ = stop(t.Context()) }()
+
+	// Re-slice into the caller's spare capacity: it must still be zero-valued.
+	spare := callerTypes[:cap(callerTypes)][1:3]
+	for i, pt := range spare {
+		if pt != "" {
+			t.Fatalf("InitProfiling wrote into the caller's backing array at +%d: %q", i+1, pt)
+		}
+	}
+}
+
 func TestProfilingTags(t *testing.T) {
 	got := profilingTags(ProfilingConfig{
 		ServiceVersion: "1.2.3",

@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/grafana/pyroscope-go"
 	"github.com/sirupsen/logrus"
@@ -76,8 +77,10 @@ type ProfilingConfig struct {
 // no-op stop is returned, so callers can defer the stop unconditionally.
 //
 // The returned stop function SHOULD be called on process exit to flush the
-// final profile. It takes a context for signature symmetry with
-// InitTracing's shutdown; the Pyroscope SDK's own Stop does not observe it.
+// final profile. It is safe to call more than once (subsequent calls are
+// no-ops returning the first result), matching the idempotency of
+// InitTracing's shutdown. It takes a context for signature symmetry with
+// that shutdown; the Pyroscope SDK's own Stop does not observe it.
 //
 // logger is optional (pass nil to silence the SDK). It is typed as
 // logrus.FieldLogger, which structurally satisfies the Pyroscope SDK's Logger
@@ -94,12 +97,16 @@ func InitProfiling(ctx context.Context, cfg ProfilingConfig, logger logrus.Field
 		return nil, cerr
 	}
 
-	// Copy the default types (never append into the package-level slice) and
-	// opt into mutex/block profiles when their runtime knobs are configured.
-	profileTypes := cfg.ProfileTypes
-	if profileTypes == nil {
-		profileTypes = append([]pyroscope.ProfileType(nil), pyroscope.DefaultProfileTypes...)
+	// Always copy the source slice before appending: appending in place would
+	// write into the package-level DefaultProfileTypes, or — when the caller
+	// supplied ProfileTypes with spare capacity — into the caller's backing
+	// array, which they could then overwrite under the running profiler.
+	source := cfg.ProfileTypes
+	if source == nil {
+		source = pyroscope.DefaultProfileTypes
 	}
+	profileTypes := append([]pyroscope.ProfileType(nil), source...)
+	// Opt into mutex/block profiles when their runtime knobs are configured.
 	if cfg.MutexProfileFraction > 0 {
 		runtime.SetMutexProfileFraction(cfg.MutexProfileFraction)
 		profileTypes = append(profileTypes, pyroscope.ProfileMutexCount, pyroscope.ProfileMutexDuration)
@@ -124,7 +131,19 @@ func InitProfiling(ctx context.Context, cfg ProfilingConfig, logger logrus.Field
 		return nil, fmt.Errorf("start pyroscope profiler: %w", err)
 	}
 
-	return func(context.Context) error { return profiler.Stop() }, nil
+	// Guard with a Once: the SDK's uploader Stop closes its done channel
+	// without a guard of its own, so a second call panics with "close of
+	// closed channel". OTel's TracerProvider.Shutdown is idempotent, so
+	// callers reasonably expect the same of this stop (e.g. a deferred stop
+	// plus an explicit one on a shutdown path).
+	var (
+		once    sync.Once
+		stopErr error
+	)
+	return func(context.Context) error {
+		once.Do(func() { stopErr = profiler.Stop() })
+		return stopErr
+	}, nil
 }
 
 // profilingTags derives the Pyroscope tag set from the config: service_version,
