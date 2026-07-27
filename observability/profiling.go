@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"sync"
 
@@ -57,17 +56,14 @@ type ProfilingConfig struct {
 	// Tags are extra tags merged onto the derived ones. Explicit keys here win
 	// over the derived service_version/environment/instance tags.
 	Tags map[string]string
-	// ProfileTypes overrides the set of profiles collected. When nil, the
-	// Pyroscope SDK defaults are used (CPU, alloc, inuse, goroutines).
+	// ProfileTypes overrides the set of profiles collected. When empty, the
+	// Pyroscope SDK's own defaults apply: CPU, alloc_objects, alloc_space,
+	// inuse_objects and inuse_space.
+	//
+	// Mutex and block profiles are not collected by default; they additionally
+	// require runtime.SetMutexProfileFraction / runtime.SetBlockProfileRate to
+	// be set by the service, so enabling them is left to the caller.
 	ProfileTypes []pyroscope.ProfileType
-	// MutexProfileFraction, when > 0, calls runtime.SetMutexProfileFraction and
-	// adds the mutex profile types. Optional; mutex profiles are empty without
-	// it. See runtime.SetMutexProfileFraction for the meaning of the value.
-	MutexProfileFraction int
-	// BlockProfileRate, when > 0, calls runtime.SetBlockProfileRate and adds
-	// the block profile types. Optional; block profiles are empty without it.
-	// See runtime.SetBlockProfileRate for the meaning of the value.
-	BlockProfileRate int
 }
 
 // InitProfiling starts the Pyroscope continuous profiler pushing to
@@ -97,30 +93,13 @@ func InitProfiling(ctx context.Context, cfg ProfilingConfig, logger logrus.Field
 		return nil, cerr
 	}
 
-	// Always copy the source slice before appending: appending in place would
-	// write into the package-level DefaultProfileTypes, or — when the caller
-	// supplied ProfileTypes with spare capacity — into the caller's backing
-	// array, which they could then overwrite under the running profiler.
-	source := cfg.ProfileTypes
-	if source == nil {
-		source = pyroscope.DefaultProfileTypes
-	}
-	profileTypes := append([]pyroscope.ProfileType(nil), source...)
-	// Opt into mutex/block profiles when their runtime knobs are configured.
-	if cfg.MutexProfileFraction > 0 {
-		runtime.SetMutexProfileFraction(cfg.MutexProfileFraction)
-		profileTypes = append(profileTypes, pyroscope.ProfileMutexCount, pyroscope.ProfileMutexDuration)
-	}
-	if cfg.BlockProfileRate > 0 {
-		runtime.SetBlockProfileRate(cfg.BlockProfileRate)
-		profileTypes = append(profileTypes, pyroscope.ProfileBlockCount, pyroscope.ProfileBlockDuration)
-	}
-
+	// ProfileTypes is passed through as-is: the SDK substitutes its own
+	// defaults when the slice is empty.
 	pc := pyroscope.Config{
 		ApplicationName: cfg.ServiceName,
 		ServerAddress:   cfg.ServerAddress,
 		Tags:            profilingTags(cfg),
-		ProfileTypes:    profileTypes,
+		ProfileTypes:    cfg.ProfileTypes,
 	}
 	if logger != nil {
 		pc.Logger = logger

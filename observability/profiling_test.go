@@ -82,37 +82,6 @@ func TestInitProfiling_StopIsIdempotent(t *testing.T) {
 	_ = stop(t.Context()) // must not panic
 }
 
-func TestInitProfiling_DoesNotMutateCallerProfileTypes(t *testing.T) {
-	// A caller-supplied slice with spare capacity must not be appended into:
-	// the profiler would share its backing array and the caller could
-	// overwrite the live profile set.
-	callerTypes := make([]pyroscope.ProfileType, 1, 8)
-	callerTypes[0] = pyroscope.ProfileAllocSpace
-
-	stop, err := InitProfiling(t.Context(), ProfilingConfig{
-		ServerAddress:        "http://127.0.0.1:1",
-		ServiceName:          "no-mutate-test",
-		ProfileTypes:         callerTypes,
-		MutexProfileFraction: 5,
-	}, nil)
-	if err != nil {
-		t.Fatalf("InitProfiling returned error: %v", err)
-	}
-	defer func() { _ = stop(t.Context()) }()
-
-	// Extend over the caller's spare capacity: it must still be zero-valued.
-	// (A single re-slice expression trips gosec's G602 bounds analysis.)
-	full := callerTypes[:cap(callerTypes)]
-	for i, pt := range full {
-		if i == 0 {
-			continue // the caller's own element
-		}
-		if pt != "" {
-			t.Fatalf("InitProfiling wrote into the caller's backing array at +%d: %q", i, pt)
-		}
-	}
-}
-
 func TestProfilingTags(t *testing.T) {
 	got := profilingTags(ProfilingConfig{
 		ServiceVersion: "1.2.3",
