@@ -100,11 +100,15 @@ func TestInitProfiling_DoesNotMutateCallerProfileTypes(t *testing.T) {
 	}
 	defer func() { _ = stop(t.Context()) }()
 
-	// Re-slice into the caller's spare capacity: it must still be zero-valued.
-	spare := callerTypes[:cap(callerTypes)][1:3]
-	for i, pt := range spare {
+	// Extend over the caller's spare capacity: it must still be zero-valued.
+	// (A single re-slice expression trips gosec's G602 bounds analysis.)
+	full := callerTypes[:cap(callerTypes)]
+	for i, pt := range full {
+		if i == 0 {
+			continue // the caller's own element
+		}
 		if pt != "" {
-			t.Fatalf("InitProfiling wrote into the caller's backing array at +%d: %q", i+1, pt)
+			t.Fatalf("InitProfiling wrote into the caller's backing array at +%d: %q", i, pt)
 		}
 	}
 }
