@@ -27,6 +27,54 @@ Services can optionally implement the following interfaces from `app/service.go`
 
 The app detects and invokes these interfaces at appropriate stages in the lifecycle.
 
+## 🌐 Built-in HTTP Middleware
+
+The framework automatically installs the following middleware on every HTTP request, before any service-registered middleware runs:
+
+| Middleware            | Behaviour                                                                                                   |
+|-----------------------|-------------------------------------------------------------------------------------------------------------|
+| Distributed tracing   | Assigns a `X-Trace-ID` to every request (ULID). Propagates an inbound header when valid; generates a new one otherwise. Stores IDs in the request context and echoes `X-Trace-ID` back in the response. |
+| Request logging       | Logs each request with method, URI, status, duration, trace ID, and optional memory stats.                  |
+| Prometheus metrics    | Instruments every route with request count and latency histograms via `promhttp`.                           |
+
+### Distributed Tracing (`tracing` package)
+
+The framework ships a lightweight, self-contained tracing layer based on [ULID](https://github.com/oklog/ulid) identifiers. It does **not** depend on OpenTelemetry or any external tracing backend.
+
+**Key concepts:**
+
+| Concept             | Description                                                                                       |
+|---------------------|---------------------------------------------------------------------------------------------------|
+| `trace_id`          | Unique ID for the current operation. Generated per inbound HTTP request.                          |
+| `parent_trace_id`   | The previous `trace_id` when `StartSpan` is called on a context that already carries one.        |
+| `X-Trace-ID` header | HTTP header used to receive a caller-supplied trace ID and to propagate it to the response.       |
+
+**Using trace IDs in service code:**
+
+```go
+import "github.com/kilnfi/go-utils/tracing"
+
+// Retrieve the trace ID from a request context (set automatically by the middleware).
+traceID := tracing.GetTraceID(ctx)
+
+// Decorate a logger with trace fields for structured log correlation.
+log := tracing.LoggerWithTrace(ctx, logger)
+log.Info("processing request") // emits trace_id (and parent_trace_id when present)
+
+// Start a child span when entering a new logical operation (e.g. a background tick).
+// The existing trace ID becomes parent_trace_id; a new one is generated.
+ctx = tracing.StartSpan(ctx)
+
+// Propagate the trace ID on outbound HTTP calls.
+outCtx := tracing.WithOutboundHeaders(ctx, http.Header{
+    tracing.HeaderTraceID: []string{tracing.GetTraceID(ctx)},
+})
+```
+
+Inbound `X-Trace-ID` values are validated (alphanumeric, hyphen, underscore, dot; max 128 chars; no control characters). Invalid values are silently replaced with a freshly generated ULID.
+
+---
+
 ## 🚀 App Lifecycle
 
 ```
@@ -252,6 +300,70 @@ Once a service is registered via `app.RegisterService(...)`, the framework **aut
 
 > ✅ Your service implementations remain clean and focused — no need to explicitly invoke lifecycle methods.
 
+
+---
+
+## 🔍 Optional pprof Server
+
+The framework can start a separate HTTP server exposing Go's standard `net/http/pprof` endpoints. This is **disabled by default** and should only be enabled in development or when profiling a specific deployment under controlled conditions.
+
+### Enabling pprof
+
+**Via flags / environment variables** (registered automatically when you call `app.Flags`):
+
+| Flag              | Env var         | Default              | Description                         |
+|-------------------|-----------------|----------------------|-------------------------------------|
+| `--pprof-enabled` | `PPROF_ENABLED` | `false`              | Start the pprof server              |
+| `--pprof-address` | `PPROF_ADDRESS` | `127.0.0.1:6060`     | Listen address (loopback only)      |
+
+**Via `Config` struct:**
+
+```go
+cfg := &app.Config{
+    PProf: &pprof.Config{
+        Enabled: true,
+        Address: "127.0.0.1:6060", // must be a loopback address
+    },
+}
+```
+
+The framework validates that the address is loopback-only (`127.0.0.1`, `::1`, or `localhost`). Wildcard or non-loopback binds are rejected at startup to prevent accidental network exposure.
+
+### Accessing pprof endpoints
+
+Use `kubectl port-forward` to reach the server from your local machine:
+
+```bash
+kubectl port-forward pod/<pod-name> 6060:6060
+```
+
+Then open `http://localhost:6060/debug/pprof/` in your browser or use `go tool pprof`:
+
+```bash
+# 30-second CPU profile
+go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
+
+# Heap snapshot
+go tool pprof http://localhost:6060/debug/pprof/heap
+```
+
+### Available endpoints
+
+| Endpoint                        | Description                                |
+|---------------------------------|--------------------------------------------|
+| `GET /debug/pprof/`             | Index page with links to all profiles      |
+| `GET /debug/pprof/cmdline`      | Command-line arguments                     |
+| `GET /debug/pprof/profile`      | CPU profile (`?seconds=N`)                 |
+| `GET /debug/pprof/symbol`       | Symbol lookup                              |
+| `GET /debug/pprof/trace`        | Execution trace (`?seconds=N`)             |
+| `GET /debug/pprof/heap`         | Heap profile                               |
+| `GET /debug/pprof/goroutine`    | Goroutine stacks                           |
+| `GET /debug/pprof/block`        | Block profile                              |
+| `GET /debug/pprof/threadcreate` | Thread-creation profile                    |
+| `GET /debug/pprof/mutex`        | Mutex contention profile                   |
+| `GET /debug/pprof/allocs`       | Allocation profile                         |
+
+> ⚠️ When pprof is enabled, the framework logs a warning at startup. Treat this warning as a reminder to confirm the setting is intentional before deploying to production.
 
 ---
 
