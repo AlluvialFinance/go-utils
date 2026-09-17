@@ -8,7 +8,6 @@ import (
 	kilntypes "github.com/kilnfi/go-utils/common/types"
 	kilntls "github.com/kilnfi/go-utils/crypto/tls"
 	kilnnet "github.com/kilnfi/go-utils/net"
-	"golang.org/x/net/http2"
 )
 
 // TransportConfig options to configure communication between Traefik and the servers
@@ -79,10 +78,10 @@ func NewTransport(cfg *TransportConfig) (*http.Transport, error) {
 	}
 
 	if cfg.EnableHTTP2 {
-		err := http2.ConfigureTransport(transport)
-		if err != nil {
-			return nil, err
-		}
+		protocols := new(http.Protocols)
+		protocols.SetHTTP1(true)
+		protocols.SetHTTP2(true)
+		transport.Protocols = protocols
 	}
 
 	return transport, nil
