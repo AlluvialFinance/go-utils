@@ -34,6 +34,10 @@ linters:
       rules:
         - name: use-any
           disabled: true
+        # Package names intentionally reflect their domain rather than their
+        # directory (e.g. eth2http in ethereum/consensus/client/http).
+        - name: package-directory-mismatch
+          disabled: true
         - name: if-return
           disabled: true
         - name: max-public-structs

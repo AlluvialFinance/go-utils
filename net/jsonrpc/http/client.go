@@ -1,9 +1,9 @@
-//nolint:revive // package name intentionally reflects domain, not directory name
 package jsonrpchttp
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -139,7 +139,7 @@ type responseMsg struct {
 
 func inspectCallResponseMsg(msg *responseMsg, res interface{}) error {
 	if msg.Error == nil && msg.Result == nil {
-		return fmt.Errorf("invalid JSON-RPC response missing both result and error")
+		return errors.New("invalid JSON-RPC response missing both result and error")
 	}
 
 	if msg.Error != nil {
