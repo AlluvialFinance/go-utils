@@ -80,7 +80,12 @@ type BeaconClient interface {
 	GetBlockHeader(ctx context.Context, blockID string) (*types.BeaconBlockHeader, error)
 
 	// GetBlock returns block details for given block id.
+	// It fails for Gloas blocks and later, whose body no longer embeds the execution payload.
 	GetBlock(ctx context.Context, blockID string) (*bellatrix.SignedBeaconBlock, error)
+
+	// GetBlockExecution returns the execution-layer view of the block for given block id: the
+	// embedded payload before Gloas, the builder bid from Gloas on (EIP-7732).
+	GetBlockExecution(ctx context.Context, blockID string) (*types.BlockExecution, error)
 
 	// GetBlockRoot returns hashTreeRoot of block
 	GetBlockRoot(ctx context.Context, blockID string) (*beaconcommon.Root, error)
