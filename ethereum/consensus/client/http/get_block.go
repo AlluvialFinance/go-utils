@@ -2,6 +2,7 @@ package eth2http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -58,5 +59,24 @@ func inspectGetBlockResponse(resp *http.Response) (*bellatrix.SignedBeaconBlock,
 		return nil, err
 	}
 
+	// From Gloas on the body no longer embeds the execution payload, so decoding it as a Bellatrix
+	// block would succeed with a zero payload. Use GetBlockExecution for those blocks.
+	if !bellatrixCompatibleVersions[msg.Version] {
+		return nil, fmt.Errorf("%w %q, use GetBlockExecution", ErrUnsupportedBlockVersion, msg.Version)
+	}
+
 	return msg.Data, nil
+}
+
+// bellatrixCompatibleVersions are the versions GetBlock can decode into a Bellatrix block. An empty
+// version is accepted for nodes that do not report it.
+var bellatrixCompatibleVersions = map[string]bool{
+	"":          true,
+	"phase0":    true,
+	"altair":    true,
+	"bellatrix": true,
+	"capella":   true,
+	"deneb":     true,
+	"electra":   true,
+	"fulu":      true,
 }

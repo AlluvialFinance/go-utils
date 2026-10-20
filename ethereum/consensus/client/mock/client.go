@@ -98,6 +98,21 @@ func (mr *MockClientMockRecorder) GetBlockAttestations(ctx, blockID interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockAttestations", reflect.TypeOf((*MockClient)(nil).GetBlockAttestations), ctx, blockID)
 }
 
+// GetBlockExecution mocks base method.
+func (m *MockClient) GetBlockExecution(ctx context.Context, blockID string) (*types.BlockExecution, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBlockExecution", ctx, blockID)
+	ret0, _ := ret[0].(*types.BlockExecution)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBlockExecution indicates an expected call of GetBlockExecution.
+func (mr *MockClientMockRecorder) GetBlockExecution(ctx, blockID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockExecution", reflect.TypeOf((*MockClient)(nil).GetBlockExecution), ctx, blockID)
+}
+
 // GetBlockHeader mocks base method.
 func (m *MockClient) GetBlockHeader(ctx context.Context, blockID string) (*types.BeaconBlockHeader, error) {
 	m.ctrl.T.Helper()
@@ -449,6 +464,21 @@ func (m *MockBeaconClient) GetBlockAttestations(ctx context.Context, blockID str
 func (mr *MockBeaconClientMockRecorder) GetBlockAttestations(ctx, blockID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockAttestations", reflect.TypeOf((*MockBeaconClient)(nil).GetBlockAttestations), ctx, blockID)
+}
+
+// GetBlockExecution mocks base method.
+func (m *MockBeaconClient) GetBlockExecution(ctx context.Context, blockID string) (*types.BlockExecution, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBlockExecution", ctx, blockID)
+	ret0, _ := ret[0].(*types.BlockExecution)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBlockExecution indicates an expected call of GetBlockExecution.
+func (mr *MockBeaconClientMockRecorder) GetBlockExecution(ctx, blockID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockExecution", reflect.TypeOf((*MockBeaconClient)(nil).GetBlockExecution), ctx, blockID)
 }
 
 // GetBlockHeader mocks base method.

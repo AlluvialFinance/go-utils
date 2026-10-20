@@ -1,0 +1,95 @@
+{
+  "version": "fulu",
+  "execution_optimistic": false,
+  "finalized": true,
+  "data": {
+    "message": {
+      "slot": "15465088",
+      "proposer_index": "2107456",
+      "parent_root": "0x0d047ce77b3fd1bc566595e7c4610b97dd1962fbb4c6f2fd2baa971e29f4afea",
+      "state_root": "0xbe9d2afb7bbd4392b53cacde0e5d7dbfbb04e2983abd3e2988b1b4d4d79845fc",
+      "body": {
+        "randao_reveal": "0xafa5eb41c1ac7888ecbb2d4ad3680cd187905aba1f86f2ecdfa57fde0b6b1e3304d21ff6db96998387a218639b91a9aa10c43daea405ba896d32adb12a504ede45469422dc030c036d827d6607186a6af70fb884a07b8ca4e7ac46e25c4972cd",
+        "eth1_data": {
+          "deposit_root": "0x2ebc563cabdbbacbc56f0de1d2d1c2d5315a4b071fcd8566aabbf0a45161c64e",
+          "deposit_count": "2045305",
+          "block_hash": "0x0958d83550263ff0d9f9a0bc5ea3cd2a136e0933b6f43cbb17f36e4da8d809b1"
+        },
+        "graffiti": "0x5374616b65576973650000000000000000000000000000000000000000000000",
+        "proposer_slashings": [],
+        "attester_slashings": [],
+        "attestations": [
+          {
+            "aggregation_bits": "0xfffffffffffffffffffffffffffbfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbffffffffffffffffffffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffff7fffffffffffffffffffffffffffffffffefffffffffffffffffffffffffdfffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbffffffffffffefffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbffffffffffffffffffffffffffffffffffffffffffffffffffffdffffffffffefffffffffffffffbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffefffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb7fffffffffffffffffffffffffffffffffffffffffffffbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7fffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7fffffffffffffffffffffffffbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe7ffffffffffffffffffffffffffffffffff7ffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffff7fffffffffffffffbffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffffffffffffffffffffffffffffffbfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffcfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffdffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7fffffffffffffffffff",
+            "data": {
+              "slot": "15465087",
+              "index": "0",
+              "beacon_block_root": "0x0d047ce77b3fd1bc566595e7c4610b97dd1962fbb4c6f2fd2baa971e29f4afea",
+              "source": {
+                "epoch": "483282",
+                "root": "0xf5bb2e2ad20cd95a0a94a8f4f89502334350317fc074a2042149d31940598817"
+              },
+              "target": {
+                "epoch": "483283",
+                "root": "0xb567374b12c0d1d81d3321dd3b3e22a42766119bae254cae1bed53d0b0eb636e"
+              }
+            },
+            "signature": "0xb06190d451b9095036f38ffe565ab2cd1bb63f603d2aace64bdb5074808a357037400f7eb768a4698e13b5e4188770150c950a20df0b8d60cbe19485ecbe1665e48119c5b70c39018e74219d8dbad9fab42cf6dd7347eb146627850654191b54",
+            "committee_bits": "0xffffffffffffffff"
+          }
+        ],
+        "deposits": [],
+        "voluntary_exits": [],
+        "sync_aggregate": {
+          "sync_committee_bits": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "sync_committee_signature": "0x8bfb7d64ea774074e1a6ed0648e5b7b73e990477dfe990fc6a8b80a322b7dfe47e8f76da4bd18841419eb922a4426ee21724bf56a7f25ce16b9f7097e31c0b53250dc54d072f51a0a1c26b2275438659faa36855cc6f4b49ea990bad3694ed89"
+        },
+        "execution_payload": {
+          "parent_hash": "0x8088505e0977876b297f3c8486fec35bf8c2aef266694522522dd7fe6592591d",
+          "fee_recipient": "0x4838b106fce9647bdf1e7877bf73ce8b0bad5f97",
+          "state_root": "0x32634ce8351843ecc76f9ac35c29529ef6a109f8c16cff2be605febc0b5cba03",
+          "receipts_root": "0xdb070127f27cd52294092469d86ef2a9caec95736cfda980f40ab210d12344ce",
+          "logs_bloom": "0xfdfffffff9ff6dfffe8ef6fff9fbf7ffdfffb57fff1fdffeff93bdfefef5fff7df5ff1ffffff5fffbeffffe7ff6bfff5f77bfbfbffa7fbe5f3fd3fcfffff5eef7fdf7ffeffff7edffffbef7fffddefffffefffff76ffef7eb27efffffbff5efdffffffdff7fbb7f6b5ffdecdfeff6f8be7777dffaffdffbf7bf94ff6ffdbecfe95fffe5ffd7dffffebfbffff6ffbbd56eff1f1dfff7ff9dfbeffbf5ffffdfdfbdf7dbffff7fff9ffffffbff7ff6befffffcdfbf7fdeb68feffffdffff7dfe7fbffdfbfbf77ffaffbbffffffffafffb7dff7d27ff56effbffffebbd7efbeffffffedfbeefdf7dfebef7efffffeffffcffe5ffffb7bffb9ffffbffff9fff5b7fff",
+          "prev_randao": "0xbe3cc8d76b4a242e85cc01569319917afafde15ca6ae0ebcf59d9c6f4e477e3c",
+          "block_number": "26225974",
+          "gas_limit": "60000000",
+          "gas_used": "40792529",
+          "timestamp": "1792405079",
+          "extra_data": "0x546974616e2028746974616e6275696c6465722e78797a29",
+          "base_fee_per_gas": "46653613",
+          "block_hash": "0x6f85838e9e8b977d6edc8767501495bfef04199d8e7380fa2ae51e99a6606f7b",
+          "transactions": [
+            "0x02f903500183028a8c808405c6cdcc8306c5ae940000000aa232009084bd71a5797d089aa4edfad480b902e409c5eabe000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000002950000cca0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000000000000000000000000000000000013a27c3a500000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000002d21baa000000000000000000005b311c5904ae00000000000000003b535b1555ffc900dac17f958d2ee523a2206206994597c13d831ec700000000000000000000000000000000000000000000000000000001315e43c30000000000000000000000000000000000004c00000001000000000000000000000000000000000000004f40d18516f8bbb92406777bc6331100010002000100000000000000000000000000000000000000000000000021c01e2dd67022be00006602000000000000000000001e1836ef5f215f0000000000000000000000000000036a64000000000000000008e4307e8279bdf903000100000000000000001d3ac8f4da856552000000000000000000005b311c5904ae000000000000000007b5699f8da666170001080900000000000000001e1836ef5f215f000000000000000000000000013a245941000000000000000000000000000000020000000000000000000000000000000000001ba9da3035d3199e5a9c4d800dee46f886df1457b1568b16619e302df5d77a201a5827aa27f2dcdb8d153ed2c3c2a1cfef35d82289aeae5c94785aaf474bd897810b00000000000000001d3b2425f6de6a00000000000000000000000001315e43c3000000000000000000000000032c5f2000000000000000000000000002d21baa00011bfc6439706a7aeee7b05388f3ec1cc630645cbef119ff8101b3cafa939089782b6b16208288b239dfb107386905a0ed392ea172aa7c0b743538b6c6f3a2fd3bd00000000000000000000000000000c080a0019f341c28ce5f0b5dc96ee830ea85e089e55e0c139bcb7bf2eefeef18ece8c6a028c88b70b25d31ab82054a84e8123371fda9304a27381fdd525622a191bb47a9",
+            "0x02f90174018301a4eb8402c7f2e68402c7f2e68303a66b9451c72848c68a965f66fa7a88855f9f7784502a7f80b90104771d503f000000000000000000000000000000000000000000000000000ef0337986415900000000000000000000000056534741cd8b152df6d48adf7ac51f75169a83b20000000000000000000000000000000000000000000000000000000003cb4e5c0000000000000000000000000000000000000000000000000000000c37e85c9c000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000142260fac5e5542a773aa44fbcfedf7c193bc2c599000000000000000000000000c001a05b501abbacfc32a68d52c345fa2e0f4cae52b933f0ea715c34c4a0dd372da0a5a00e5ffb6f4beb292fa7f0f117e588df990d827da59268060be0d99ace29c06dd3"
+          ],
+          "withdrawals": [
+            {
+              "index": "147056203",
+              "validator_index": "2203162",
+              "address": "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f",
+              "amount": "13401421"
+            },
+            {
+              "index": "147056204",
+              "validator_index": "2203163",
+              "address": "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f",
+              "amount": "13417595"
+            }
+          ],
+          "blob_gas_used": "1441792",
+          "excess_blob_gas": "173195563"
+        },
+        "bls_to_execution_changes": [],
+        "blob_kzg_commitments": [
+          "0x8b5b6575dc2c8a94744eb1f47899b964fcf4cebd2f48972f2b4702570ec083ce71828ad3fca87683d5c2ab5c18fac866"
+        ],
+        "execution_requests": {
+          "deposits": [],
+          "withdrawals": [],
+          "consolidations": []
+        }
+      }
+    },
+    "signature": "0x805a75d323092a58fbc938e4eb68c33ef67ce10046232a18e5c83cfe2618cf9650f01f78e2c3ac67810db9271da0f72c19525626fa5fd4f84db2a2a28146988f16d1938f03b05b1d8f2b4edba353b7d73d8313062b0935dfb93287e89e13b729"
+  }
+}
