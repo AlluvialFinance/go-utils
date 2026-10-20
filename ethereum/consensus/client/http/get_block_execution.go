@@ -106,10 +106,15 @@ func decodeBlockExecution(version string, data json.RawMessage) (*types.BlockExe
 		return nil, fmt.Errorf("failed to decode %s block: %w", version, err)
 	}
 
+	// A field missing for the version is an error, never a zero value. Only the genesis block has slot
+	// 0, and its body is empty, so slot 0 means the field is missing.
+	if block.Message.Slot == 0 {
+		return nil, fmt.Errorf("%s block has no slot", version)
+	}
+
 	body := block.Message.Body
 	result := &types.BlockExecution{Version: version, Slot: block.Message.Slot}
 
-	// A field missing for the version is an error, never a zero value.
 	if version == bidBlockVersion {
 		bid := body.SignedExecutionPayloadBid
 		if bid == nil || bid.Message.ParentBlockHash == (common.Hash{}) || bid.Message.BlockHash == (common.Hash{}) {
@@ -122,8 +127,9 @@ func decodeBlockExecution(version string, data json.RawMessage) (*types.BlockExe
 		return result, nil
 	}
 
+	// No beacon block body carries the EL genesis block, so block number 0 means the field is missing.
 	payload := body.ExecutionPayload
-	if payload == nil || payload.BlockHash == (common.Hash{}) {
+	if payload == nil || payload.BlockHash == (common.Hash{}) || payload.BlockNumber == 0 {
 		return nil, fmt.Errorf("%s block at slot %d has no execution payload", version, block.Message.Slot)
 	}
 	result.Payload = &types.ExecutionPayloadRef{
