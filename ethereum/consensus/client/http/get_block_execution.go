@@ -84,7 +84,8 @@ type signedPayloadBidRefMsg struct {
 
 type payloadBidRefMsg struct {
 	ParentBlockHash common.Hash `json:"parent_block_hash"`
-	BlockHash       common.Hash `json:"block_hash"`
+	// BlockHash is a pointer so a missing field stays distinguishable from an explicit zero hash.
+	BlockHash *common.Hash `json:"block_hash"`
 }
 
 func inspectGetBlockExecutionResponse(resp *http.Response) (*types.BlockExecution, error) {
@@ -108,6 +109,10 @@ func decodeBlockExecution(version string, data json.RawMessage) (*types.BlockExe
 
 	// A field missing for the version is an error, never a zero value. Only the genesis block has slot
 	// 0, and its body is empty, so slot 0 means the field is missing.
+	//
+	// The bid's block_hash is the exception to the zero check: the consensus spec only requires it to
+	// differ from parent_block_hash, so a valid block may carry a zero block_hash (its slot then ends
+	// EMPTY). It must still be present.
 	if block.Message.Slot == 0 {
 		return nil, fmt.Errorf("%s block has no slot", version)
 	}
@@ -117,12 +122,12 @@ func decodeBlockExecution(version string, data json.RawMessage) (*types.BlockExe
 
 	if version == bidBlockVersion {
 		bid := body.SignedExecutionPayloadBid
-		if bid == nil || bid.Message.ParentBlockHash == (common.Hash{}) || bid.Message.BlockHash == (common.Hash{}) {
+		if bid == nil || bid.Message.ParentBlockHash == (common.Hash{}) || bid.Message.BlockHash == nil {
 			return nil, fmt.Errorf("%s block at slot %d has no execution payload bid", version, block.Message.Slot)
 		}
 		result.Bid = &types.ExecutionPayloadBidRef{
 			ParentBlockHash: bid.Message.ParentBlockHash,
-			BlockHash:       bid.Message.BlockHash,
+			BlockHash:       *bid.Message.BlockHash,
 		}
 		return result, nil
 	}

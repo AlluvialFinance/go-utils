@@ -32,6 +32,7 @@ type ExecutionPayloadBidRef struct {
 	ParentBlockHash common.Hash
 
 	// BlockHash is the execution payload the bid commits to. It is revealed separately and may never
-	// become canonical.
+	// become canonical. It is as received and may be zero: the consensus spec only requires it to
+	// differ from ParentBlockHash.
 	BlockHash common.Hash
 }

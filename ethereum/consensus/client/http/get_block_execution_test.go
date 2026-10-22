@@ -176,6 +176,36 @@ func TestDecodeBlockExecution(t *testing.T) {
 	}
 }
 
+// The spec only requires the bid's block_hash to differ from parent_block_hash, so a valid block may
+// carry a zero one. Only the parent_block_hash is required to be non-zero.
+func TestDecodeBlockExecutionGloasBidZeroBlockHash(t *testing.T) {
+	t.Run("zero block hash decodes with the parent hash", func(t *testing.T) {
+		data := blockData("100", bidBody(`"parent_block_hash":"`+hashA+`","block_hash":"`+zeroHash+`"`))
+
+		block, err := decodeBlockExecution("gloas", []byte(data))
+		require.NoError(t, err)
+		assert.Equal(t, &types.BlockExecution{
+			Version: "gloas",
+			Slot:    100,
+			Bid:     &types.ExecutionPayloadBidRef{ParentBlockHash: common.HexToHash(hashA), BlockHash: common.Hash{}},
+		}, block)
+	})
+
+	t.Run("zero parent hash is an error", func(t *testing.T) {
+		data := blockData("100", bidBody(`"parent_block_hash":"`+zeroHash+`","block_hash":"`+zeroHash+`"`))
+
+		block, err := decodeBlockExecution("gloas", []byte(data))
+		assert.Nil(t, block)
+		assert.ErrorContains(t, err, "has no execution payload bid")
+	})
+
+	t.Run("missing bid is an error", func(t *testing.T) {
+		block, err := decodeBlockExecution("gloas", []byte(blockData("100", `{}`)))
+		assert.Nil(t, block)
+		assert.ErrorContains(t, err, "has no execution payload bid")
+	})
+}
+
 func TestDecodeBlockExecutionRejectsUnsupportedVersions(t *testing.T) {
 	// Checked before decoding: an unknown fork may not have either shape.
 	for _, version := range []string{"", "phase0", "altair", "heze", "Fulu", "GLOAS", " fulu"} {
@@ -239,7 +269,7 @@ func TestDecodeBlockExecutionRejectsIncompleteBlocks(t *testing.T) {
 		{"missing parent hash", blockData("100", bidBody(`"block_hash":"`+hashB+`"`)), noBid},
 		{"zero parent hash", blockData("100", bidBody(`"parent_block_hash":"`+zeroHash+`","block_hash":"`+hashB+`"`)), noBid},
 		{"missing block hash", blockData("100", bidBody(`"parent_block_hash":"`+hashA+`"`)), noBid},
-		{"zero block hash", blockData("100", bidBody(`"parent_block_hash":"`+hashA+`","block_hash":"`+zeroHash+`"`)), noBid},
+		{"null block hash", blockData("100", bidBody(`"parent_block_hash":"`+hashA+`","block_hash":null`)), noBid},
 		{"short parent hash", blockData("100", bidBody(`"parent_block_hash":"0x1234","block_hash":"`+hashB+`"`)), badDecode},
 		{"short block hash", blockData("100", bidBody(`"parent_block_hash":"`+hashA+`","block_hash":"0x1234"`)), badDecode},
 	}
